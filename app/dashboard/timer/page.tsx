@@ -1,31 +1,109 @@
 "use client";
-
-import React, { useState, useEffect, useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import * as Dialog from "@radix-ui/react-dialog";
+
+// Componente Modal para Agregar Eventos
+const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
+  return (
+    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-[95vw] max-w-md max-h-[85vh] overflow-y-auto z-[49]">
+          <Dialog.Title className="text-lg font-bold mb-4">
+            Agregar Nuevo Evento
+          </Dialog.Title>
+          <div className="space-y-4">
+            <div>
+              <Label>Fecha y Hora Inicio</Label>
+              <Input
+                type="datetime-local"
+                value={newEvent?.start?.toISOString().slice(0, 16)}
+                onChange={(e) => setNewEvent({
+                  ...newEvent,
+                  start: new Date(e.target.value)
+                })}
+              />
+            </div>
+            <div>
+              <Label>Fecha y Hora Fin</Label>
+              <Input
+                type="datetime-local"
+                value={newEvent?.end?.toISOString().slice(0, 16)}
+                onChange={(e) => setNewEvent({
+                  ...newEvent,
+                  end: new Date(e.target.value)
+                })}
+              />
+            </div>
+            <div>
+              <Label>Proyecto</Label>
+              <Select 
+                value={newEvent?.project} 
+                onValueChange={(value) => setNewEvent({...newEvent, project: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un proyecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.name}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Descripción</Label>
+              <Textarea
+                value={newEvent?.descripcion}
+                onChange={(e) => setNewEvent({...newEvent, descripcion: e.target.value})}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Dialog.Close asChild>
+                <Button variant="outline">Cancelar</Button>
+              </Dialog.Close>
+              <Button onClick={onSave}>Guardar</Button>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+};
 
 export default function Home() {
-  const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef(null);
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [projects, setProjects] = useState([]); // Lista de proyectos
-  const [selectedProject, setSelectedProject] = useState(""); // Proyecto seleccionado
-  const [newProjectName, setNewProjectName] = useState(""); // Nuevo proyecto
-  const [taskDescription, setTaskDescription] = useState(""); // Descripción de la tarea
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [newEvent, setNewEvent] = useState(null);
 
-  // Obtener proyectos del backend
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   const fetchProjects = async () => {
     try {
       const response = await fetch("http://127.0.0.1:8000/project/get", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await response.json();
       if (data.status === "success") {
@@ -36,89 +114,141 @@ export default function Home() {
     }
   };
 
-  // Agregar un nuevo proyecto
-  const createProject = async () => {
-    if (!newProjectName.trim()) return;
-
+  const fetchEvents = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/project/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({ project_name: newProjectName }),
+      const response = await fetch("http://127.0.0.1:8000/event/eventos/", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
+      const data = await response.json();
+      if (data.status === "success") {
+        const formattedEvents = data.data.map((event) => ({
+          id: event.id,
+          title: event.descripcion,
+          start: new Date(event.fecha_inicio).toISOString(),
+          end: new Date(event.fecha_fin).toISOString(),
+          display: "block",
+          allDay: false,
+          editable: false,
+          durationEditable: false,
+          eventResizableFromStart: false,
+          extendedProps: {
+            project: event.project,
+            duracion: formatTime(event.duracion),
+            descripcion: event.descripcion,
+          },
+        }));
 
-      if (response.ok) {
-        setNewProjectName(""); // Limpiar el input
-        fetchProjects(); // Volver a obtener los proyectos
+        setEvents(formattedEvents);
+        if (calendarRef.current) {
+          calendarRef.current.getApi().refetchEvents();
+        }
       }
     } catch (error) {
-      console.error("Error al crear proyecto:", error);
+      console.error("Error al obtener eventos:", error);
     }
   };
 
-  // Obtener proyectos al cargar el componente
   useEffect(() => {
     fetchProjects();
+    fetchEvents();
   }, []);
 
-  // Manejo del Timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval;
     if (isRunning) {
       interval = setInterval(() => {
         setTime((prev) => prev + 1);
       }, 1000);
-    } else {
-      clearInterval(interval);
     }
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  const handleDateClick = (info) => {
+    const start = new Date(info.date);
+    const end = new Date(start);
+    end.setHours(end.getHours() + 1);
+
+    setNewEvent({
+      start,
+      end,
+      project: "",
+      descripcion: "",
+    });
   };
 
-  // Guardar sesión de trabajo
-  const saveSession = async () => {
-    if (!selectedProject || !taskDescription.trim()) {
-      alert("Selecciona un proyecto y agrega una descripción.");
+  const saveNewEvent = async () => {
+    if (!newEvent?.project || !newEvent?.descripcion?.trim()) {
+      alert("Por favor, completa todos los campos");
       return;
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/task/add", {
+      const response = await fetch("http://127.0.0.1:8000/event/eventos/manual/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          project_id: selectedProject,
-          description: taskDescription,
-          duration: time, // En segundos
+          project: newEvent.project,
+          descripcion: newEvent.descripcion,
+          fecha_inicio: newEvent.start.toISOString(),
+          fecha_fin: newEvent.end.toISOString(),
         }),
       });
 
       if (response.ok) {
-        alert("Sesión guardada correctamente.");
-        setTime(0);
-        setTaskDescription("");
-        setIsRunning(false);
+        alert("Evento guardado correctamente");
+        setNewEvent(null);
+        fetchEvents();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al guardar el evento");
       }
     } catch (error) {
-      console.error("Error al guardar la sesión:", error);
+      console.error("Error al guardar el evento:", error);
+      alert("Error de conexión al servidor");
+    }
+  };
+
+  const saveTimerEvent = async () => {
+    if (!selectedProject || !taskDescription.trim()) {
+      alert("Por favor, selecciona un proyecto y añade una descripción");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/event/eventos/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          project: selectedProject,
+          descripcion: taskDescription,
+          duracion: time,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Evento guardado correctamente");
+        setTime(0);
+        setIsRunning(false);
+        setTaskDescription("");
+        fetchEvents();
+      } else {
+        alert("Error al guardar el evento");
+      }
+    } catch (error) {
+      console.error("Error al guardar el evento:", error);
+      alert("Error de conexión al servidor");
     }
   };
 
   return (
     <div className="p-6 space-y-6">
-      {/* Temporizador con selector de proyectos */}
-      <div className="p-4 bg-gray-800 text-white rounded-lg space-y-4">
+      <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
         <h2 className="text-lg font-bold">Temporizador</h2>
         <span className="text-2xl">{formatTime(time)}</span>
 
@@ -126,19 +256,19 @@ export default function Home() {
           <Button onClick={() => setIsRunning(!isRunning)}>
             {isRunning ? "Pause" : "Start"}
           </Button>
-          <Button onClick={() => setTime(0)}>Reset</Button>
+          <Button onClick={saveTimerEvent}>Stop & Save</Button>
+          <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
 
-        {/* Seleccionar Proyecto */}
         <div className="mt-4">
           <label className="block text-sm">Proyecto:</label>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecciona un proyecto" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar proyecto" />
             </SelectTrigger>
             <SelectContent>
               {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
+                <SelectItem key={project.id} value={project.name}>
                   {project.name}
                 </SelectItem>
               ))}
@@ -146,7 +276,6 @@ export default function Home() {
           </Select>
         </div>
 
-        {/* Descripción de la tarea */}
         <div className="mt-4">
           <label className="block text-sm">Descripción de la tarea:</label>
           <Textarea
@@ -155,39 +284,48 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
-
-        <Button onClick={saveSession} className="mt-4 w-full">
-          Guardar Sesión
-        </Button>
       </div>
 
-      {/* Sección de Creación de Proyectos */}
-      <div className="space-y-4 p-4 bg-gray-200 rounded-lg">
-        <h3 className="text-lg font-bold">Gestionar Proyectos</h3>
-        <div className="flex space-x-2">
-          <Input
-            type="text"
-            placeholder="Nuevo proyecto"
-            value={newProjectName}
-            onChange={(e) => setNewProjectName(e.target.value)}
-          />
-          <Button onClick={createProject}>Crear</Button>
+      <FullCalendar
+        ref={calendarRef}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="timeGridWeek"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }}
+        editable={false}
+        selectable
+        height="500px"
+        events={events}
+        dateClick={handleDateClick}
+        eventClick={(info) => setSelectedEvent(info.event)}
+      />
+
+      {selectedEvent && (
+        <div className="p-6 bg-gray-200 rounded-lg shadow-lg mt-6">
+          <h2 className="text-lg font-bold">Detalles del Evento</h2>
+          <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
+          <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
+          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion}</p>
+          <div className="flex justify-between mt-4">
+            <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
+            <Button onClick={() => alert("Eliminar evento aún no implementado")} className="bg-red-500 text-white hover:bg-red-700">
+              Eliminar Evento
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Calendario con tamaño fijo */}
-      <div className="overflow-hidden" style={{ height: "500px" }}>
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={false}
-          editable
-          selectable
-          height="100%"
-          events={[{ title: "Task 1", start: new Date() }]}
-        />
-      </div>
+      <AddEventModal
+        isOpen={newEvent !== null}
+        onClose={() => setNewEvent(null)}
+        newEvent={newEvent}
+        setNewEvent={setNewEvent}
+        onSave={saveNewEvent}
+        projects={projects}
+      />
     </div>
   );
 }
