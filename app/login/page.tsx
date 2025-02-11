@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +30,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/users/login", {
+      const res = await fetch("https://tgglmax-backend.onrender.com/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -107,7 +109,14 @@ export default function LoginPage() {
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="flex justify-center">
+          <Link href="/register">
+            <Button variant="outline" className="mt-2">
+              Crear una cuenta
+            </Button>
+          </Link>
+        </CardFooter>
       </Card>
     </div>
   );
-}   
+}

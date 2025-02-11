@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
 
+const API_URL = "https://tgglmax-backend.onrender.com";
+
 // Componente Modal para Agregar Eventos
 const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
   // Función para ajustar la zona horaria
@@ -122,7 +124,7 @@ export default function Home() {
 
   const fetchProjects = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/project/get", {
+      const response = await fetch(`${API_URL}/project/get`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await response.json();
@@ -136,7 +138,7 @@ export default function Home() {
 
   const fetchEvents = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/event/eventos/", {
+      const response = await fetch(`${API_URL}/event/eventos/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await response.json();
@@ -208,7 +210,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/event/eventos/manual/", {
+      const response = await fetch(`${API_URL}/event/eventos/manual/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -243,7 +245,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/event/eventos/", {
+      const response = await fetch(`${API_URL}/event/eventos/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

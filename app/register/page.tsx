@@ -35,7 +35,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:8000/users/register", {
+      const response = await fetch("https://tgglmax-backend.onrender.com/users/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,6 +47,7 @@ export default function RegisterPage() {
       });
 
       if (response.ok) {
+        // Redirigir automáticamente al login después de un registro exitoso
         router.push("/login");
       } else {
         const data = await response.json();
@@ -113,10 +114,11 @@ export default function RegisterPage() {
             >
               {isLoading ? "Registrando..." : "Registrarse"}
             </Button>
-            <div className="text-center text-sm text-gray-600">
-              ¿Ya tienes una cuenta?{" "}
-              <Link href="/login" className="text-blue-500 hover:underline">
-                Inicia sesión aquí
+            <div className="text-center mt-4">
+              <Link href="/login">
+                <Button variant="outline" className="w-full">
+                  Ir a Iniciar Sesión
+                </Button>
               </Link>
             </div>
           </form>
