@@ -245,8 +245,29 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchEvents();
+      }
+    };
+
+    const handleFocus = () => {
+      fetchEvents();
+    };
+
+    // Cargar datos iniciales
     fetchProjects();
     fetchEvents();
+
+    // Agregar event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   useEffect(() => {
