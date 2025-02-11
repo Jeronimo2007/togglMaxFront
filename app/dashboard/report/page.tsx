@@ -73,7 +73,7 @@ export default function ReportPage() {
         throw new Error("No se encontró el token de autenticación");
       }
 
-      const url = new URL("https://tgglmax-backend.onrender.com/report/get");
+      const url = new URL(`${process.env.NEXT_PUBLIC_BACKEND_URL}/report/get`);
       url.searchParams.append("token", token);
 
       const response = await fetch(url, {

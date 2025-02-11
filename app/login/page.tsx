@@ -30,7 +30,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("https://tgglmax-backend.onrender.com/users/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

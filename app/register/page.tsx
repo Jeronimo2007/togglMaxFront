@@ -35,7 +35,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("https://tgglmax-backend.onrender.com/users/register", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
