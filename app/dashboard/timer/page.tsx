@@ -10,11 +10,51 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
+import { DateClickArg } from '@fullcalendar/interaction';
+import { EventClickArg } from '@fullcalendar/core';
+
+interface Project {
+  id: string;
+  name: string;
+}
+
+interface NewEvent {
+  start: Date;
+  end: Date;
+  project: string;
+  descripcion: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  display: string;
+  allDay: boolean;
+  editable: boolean;
+  durationEditable: boolean;
+  eventResizableFromStart: boolean;
+  extendedProps: {
+    project: string;
+    duracion: string;
+    descripcion: string;
+  };
+}
+
+interface AddEventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  newEvent: NewEvent | null;
+  setNewEvent: (event: NewEvent | null) => void;
+  onSave: () => void;
+  projects: Project[];
+}
 
 // Componente Modal para Agregar Eventos
-const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
+const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
   // Función para ajustar la zona horaria
-  const adjustTimeZone = (date: Date) => {
+  const adjustTimeZone = (date: Date): string => {
     if (!date) return '';
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - userTimezoneOffset).toISOString().slice(0, 16);
@@ -39,7 +79,7 @@ const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, project
                   const date = new Date(e.target.value);
                   if (!isNaN(date.getTime())) {
                     setNewEvent({
-                      ...newEvent,
+                      ...newEvent!,
                       start: date,
                       end: newEvent?.end || new Date(date.getTime() + 3600000)
                     });
@@ -57,7 +97,7 @@ const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, project
                   const date = new Date(e.target.value);
                   if (!isNaN(date.getTime())) {
                     setNewEvent({
-                      ...newEvent,
+                      ...newEvent!,
                       end: date
                     });
                   }
@@ -68,7 +108,7 @@ const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, project
               <Label>Proyecto</Label>
               <Select 
                 value={newEvent?.project} 
-                onValueChange={(value) => setNewEvent({...newEvent, project: value})}
+                onValueChange={(value) => setNewEvent({...newEvent!, project: value})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un proyecto" />
@@ -86,7 +126,7 @@ const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, project
               <Label>Descripción</Label>
               <Textarea
                 value={newEvent?.descripcion}
-                onChange={(e) => setNewEvent({...newEvent, descripcion: e.target.value})}
+                onChange={(e) => setNewEvent({...newEvent!, descripcion: e.target.value})}
               />
             </div>
             <div className="flex justify-end space-x-2">
@@ -103,24 +143,24 @@ const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, project
 };
 
 export default function Home() {
-  const calendarRef = useRef(null);
-  const [time, setTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState("");
-  const [taskDescription, setTaskDescription] = useState("");
-  const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [newEvent, setNewEvent] = useState(null);
+  const calendarRef = useRef<FullCalendar>(null);
+  const [time, setTime] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [taskDescription, setTaskDescription] = useState<string>("");
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
 
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (): Promise<void> => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/get`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -134,14 +174,14 @@ export default function Home() {
     }
   };
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (): Promise<void> => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       const data = await response.json();
       if (data.status === "success") {
-        const formattedEvents = data.data.map((event) => ({
+        const formattedEvents = data.data.map((event: any) => ({
           id: event.id,
           title: event.descripcion,
           start: new Date(event.fecha_inicio).toISOString(),
@@ -174,7 +214,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    let interval;
+    let interval: NodeJS.Timeout;
     if (isRunning) {
       interval = setInterval(() => {
         setTime((prev) => prev + 1);
@@ -183,7 +223,7 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isRunning]);
 
-  const handleDateClick = (info) => {
+  const handleDateClick = (info: DateClickArg): void => {
     const clickedDate = new Date(info.date);
     const end = new Date(clickedDate);
     end.setHours(end.getHours() + 1);
@@ -196,7 +236,7 @@ export default function Home() {
     });
   };
 
-  const saveNewEvent = async () => {
+  const saveNewEvent = async (): Promise<void> => {
     if (!newEvent?.project || !newEvent?.descripcion?.trim()) {
       alert("Por favor, completa todos los campos");
       return;
@@ -236,7 +276,7 @@ export default function Home() {
     }
   };
 
-  const saveTimerEvent = async () => {
+  const saveTimerEvent = async (): Promise<void> => {
     if (!selectedProject || !taskDescription.trim()) {
       alert("Por favor, selecciona un proyecto y añade una descripción");
       return;
@@ -325,7 +365,7 @@ export default function Home() {
         height="500px"
         events={events}
         dateClick={handleDateClick}
-        eventClick={(info) => setSelectedEvent(info.event)}
+        eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
       />
 
       {selectedEvent && (
