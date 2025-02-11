@@ -1,17 +1,18 @@
-
 import { ReactNode } from "react";
-import "./globals.css"; // Asegúrate de importar tus estilos globales
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+import "./globals.css";
 
-export default function Layout({ children }: { children: ReactNode }) {
+// Metadata debe estar antes del componente
+export const metadata = {
+  title: 'tggleMax',
+  description: 'Aplicación de seguimiento de tiempo',
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
-      <head>
-        {/* Aquí puedes agregar metadatos o enlaces adicionales, como fuentes */}
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>tggleMax</title>
-      </head>
-      <body>
+    <html lang="es" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={GeistSans.className}>
         <main>{children}</main>
       </body>
     </html>
