@@ -13,6 +13,13 @@ import * as Dialog from "@radix-ui/react-dialog";
 
 // Componente Modal para Agregar Eventos
 const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
+  // Función para ajustar la zona horaria
+  const adjustTimeZone = (date: Date) => {
+    if (!date) return '';
+    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - userTimezoneOffset).toISOString().slice(0, 16);
+  };
+
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
@@ -26,22 +33,35 @@ const AddEventModal = ({ isOpen, onClose, newEvent, setNewEvent, onSave, project
               <Label>Fecha y Hora Inicio</Label>
               <Input
                 type="datetime-local"
-                value={newEvent?.start?.toISOString().slice(0, 16)}
-                onChange={(e) => setNewEvent({
-                  ...newEvent,
-                  start: new Date(e.target.value)
-                })}
+                required
+                value={newEvent?.start ? adjustTimeZone(newEvent.start) : ''}
+                onChange={(e) => {
+                  const date = new Date(e.target.value);
+                  if (!isNaN(date.getTime())) {
+                    setNewEvent({
+                      ...newEvent,
+                      start: date,
+                      end: newEvent?.end || new Date(date.getTime() + 3600000)
+                    });
+                  }
+                }}
               />
             </div>
             <div>
               <Label>Fecha y Hora Fin</Label>
               <Input
                 type="datetime-local"
-                value={newEvent?.end?.toISOString().slice(0, 16)}
-                onChange={(e) => setNewEvent({
-                  ...newEvent,
-                  end: new Date(e.target.value)
-                })}
+                required
+                value={newEvent?.end ? adjustTimeZone(newEvent.end) : ''}
+                onChange={(e) => {
+                  const date = new Date(e.target.value);
+                  if (!isNaN(date.getTime())) {
+                    setNewEvent({
+                      ...newEvent,
+                      end: date
+                    });
+                  }
+                }}
               />
             </div>
             <div>
@@ -164,13 +184,13 @@ export default function Home() {
   }, [isRunning]);
 
   const handleDateClick = (info) => {
-    const start = new Date(info.date);
-    const end = new Date(start);
+    const clickedDate = new Date(info.date);
+    const end = new Date(clickedDate);
     end.setHours(end.getHours() + 1);
 
     setNewEvent({
-      start,
-      end,
+      start: clickedDate,
+      end: end,
       project: "",
       descripcion: "",
     });
@@ -179,6 +199,11 @@ export default function Home() {
   const saveNewEvent = async () => {
     if (!newEvent?.project || !newEvent?.descripcion?.trim()) {
       alert("Por favor, completa todos los campos");
+      return;
+    }
+
+    if (newEvent.end <= newEvent.start) {
+      alert("La fecha de fin debe ser posterior a la fecha de inicio");
       return;
     }
 
