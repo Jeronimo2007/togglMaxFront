@@ -51,9 +51,7 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
-// Componente Modal para Agregar Eventos
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
-  // Función para ajustar la zona horaria
   const adjustTimeZone = (date: Date): string => {
     if (!date) return '';
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
@@ -152,12 +150,50 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const createProject = async () => {
+    if (!newProjectName.trim()) {
+      alert("Por favor ingrese un nombre de proyecto");
+      return;
+    }
+
+    setIsCreatingProject(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          project_name: newProjectName
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al crear el proyecto');
+      }
+
+      await fetchProjects();
+      setNewProjectName("");
+      setIsProjectModalOpen(false);
+      alert("Proyecto creado exitosamente");
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al crear el proyecto');
+    } finally {
+      setIsCreatingProject(false);
+    }
   };
 
   const fetchProjects = async (): Promise<void> => {
@@ -349,6 +385,13 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
+
+        <Button 
+          onClick={() => setIsProjectModalOpen(true)}
+          className="w-full mt-4"
+        >
+          Crear Nuevo Proyecto
+        </Button>
       </div>
 
       <FullCalendar
@@ -382,6 +425,35 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-[95vw] max-w-md z-[49]">
+            <Dialog.Title className="text-lg font-bold mb-4">
+              Crear Nuevo Proyecto
+            </Dialog.Title>
+            <div className="space-y-4">
+              <div>
+                <Label>Nombre del Proyecto</Label>
+                <Input
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="Ingrese el nombre del proyecto"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsProjectModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={createProject} disabled={isCreatingProject}>
+                  {isCreatingProject ? "Creando..." : "Crear Proyecto"}
+                </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       <AddEventModal
         isOpen={newEvent !== null}
