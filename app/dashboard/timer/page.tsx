@@ -161,11 +161,44 @@ export default function Home() {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const deleteEvent = async (eventId: string): Promise<void> => {
+    if (!eventId) {
+      console.error("ID de evento no proporcionado");
+      return;
+    }
+
+    if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (response.ok) {
+        alert("Evento eliminado correctamente");
+        setSelectedEvent(null);
+        fetchEvents(); // Actualizar la lista de eventos
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al eliminar el evento");
+      }
+    } catch (error) {
+      console.error("Error al eliminar el evento:", error);
+      alert("Error de conexión al servidor");
+    }
+  };
+
   const createProject = async () => {
     if (!newProjectName.trim()) {
       alert("Por favor ingrese un nombre de proyecto");
       return;
     }
+
 
     setIsCreatingProject(true);
     try {
@@ -440,12 +473,17 @@ export default function Home() {
           <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion}</p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
-            <Button onClick={() => alert("Eliminar evento aún no implementado")} className="bg-red-500 text-white hover:bg-red-700">
+            <Button 
+              onClick={() => deleteEvent(selectedEvent.id)} 
+              className="bg-red-500 text-white hover:bg-red-700"
+            >
               Eliminar Evento
             </Button>
           </div>
         </div>
       )}
+
+
 
       <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
         <Dialog.Portal>
