@@ -1,10 +1,10 @@
 /* Estilos base del calendario */
 .fc {
-  --fc-page-bg-color: rgb(15 23 42); /* slate-950 */
-  --fc-neutral-bg-color: rgb(30 41 59); /* slate-800 */
-  --fc-border-color: rgb(51 65 85); /* slate-700 */
-  --fc-today-bg-color: rgba(147, 51, 234, 0.15); /* Violeta rosa suave */
-  color: rgb(226 232 240); /* slate-200 */
+  --fc-page-bg-color: #1E0E2F; /* Fondo principal */
+  --fc-neutral-bg-color: #2C113A; /* Paneles secundarios */
+  --fc-border-color: #A77EC7; /* Texto secundario */
+  --fc-today-bg-color: rgba(247, 154, 255, 0.15); /* Violeta rosa suave */
+  color: #E4CFF7; /* Texto principal */
   background-color: var(--fc-page-bg-color);
   border-radius: 0.5rem;
   padding: 1rem;
@@ -64,30 +64,30 @@
 
 /* Estilos para los eventos */
 .fc-event {
-  background-color: rgb(30 41 59) !important; /* slate-800 */
-  border-color: rgb(51 65 85) !important; /* slate-700 */
+  background-color: var(--fc-neutral-bg-color) !important;
+  border-color: var(--fc-border-color) !important;
   border-radius: 4px;
   padding: 2px 4px;
 }
 
 /* Estilos para los botones */
 .fc .fc-button {
-  background-color: rgb(30 41 59) !important; /* slate-800 */
-  border-color: rgb(51 65 85) !important; /* slate-700 */
-  color: rgb(226 232 240) !important; /* slate-200 */
+  background-color: var(--fc-neutral-bg-color) !important;
+  border-color: var(--fc-border-color) !important;
+  color: var(--foreground) !important;
   font-weight: 500;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
 }
 
 .fc .fc-button:hover {
-  background-color: rgb(51 65 85) !important; /* slate-700 */
-  border-color: rgb(71 85 105) !important; /* slate-600 */
+  background-color: var(--fc-border-color) !important;
+  border-color: #F79AFF !important; /* Destacados y líneas */
 }
 
 .fc .fc-button-primary:not(:disabled).fc-button-active,
 .fc .fc-button-primary:not(:disabled):active {
-  background-color: rgb(71 85 105) !important; /* slate-600 */
+  background-color: #F79AFF !important; /* Destacados y líneas */
 }
 
 /* Estilos para la vista de tiempo */
@@ -98,37 +98,37 @@
 
 /* Estilos para el encabezado */
 .fc-toolbar-title {
-  color: rgb(226 232 240) !important; /* slate-200 */
+  color: var(--foreground) !important;
   font-size: 1.25rem !important;
   font-weight: 600 !important;
 }
 
 /* Estilos para las celdas de tiempo */
 .fc-timegrid-slot-label {
-  color: rgb(148 163 184) !important; /* slate-400 */
+  color: #A77EC7 !important; /* Texto secundario */
   font-size: 0.875rem;
 }
 
 /* Estilos para los nombres de los días */
 .fc-col-header-cell {
-  background-color: rgb(30 41 59) !important; /* slate-800 */
-  color: rgb(226 232 240) !important; /* slate-200 */
+  background-color: var(--fc-neutral-bg-color) !important;
+  color: var(--foreground) !important;
   padding: 0.75rem !important;
 }
 
 /* Estilos para el hover de eventos */
 .fc-event:hover {
-  background-color: rgb(51 65 85) !important; /* slate-700 */
+  background-color: var(--fc-border-color) !important;
 }
 
 /* Estilos para la línea de tiempo actual */
 .fc-timegrid-now-indicator-line {
-  border-color: rgb(168 85 247) !important; /* purple-500 */
+  border-color: #F79AFF !important; /* Destacados y líneas */
   border-width: 2px;
 }
 
 .fc-timegrid-now-indicator-arrow {
-  border-color: rgb(168 85 247) !important; /* purple-500 */
+  border-color: #F79AFF !important; /* Destacados y líneas */
 }
 
 /* Ajustes de responsividad */
@@ -136,7 +136,7 @@
   width: 100%;
   overflow-x: auto;
   padding: 1rem;
-  background-color: rgb(15 23 42); /* slate-950 */
+  background-color: var(--fc-page-bg-color);
   border-radius: 0.5rem;
 }
 

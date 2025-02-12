@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { Inter as FontSans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -29,16 +28,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           fontSans.variable,
           "font-sans antialiased",
           "min-h-screen",
-          "bg-background dark:bg-slate-950"
+          "bg-main-bg text-main-text"
         )}
       >
         <ThemeProvider 
           attribute="class" 
-          defaultTheme="dark" 
+          defaultTheme="custom" 
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <div className="relative min-h-screen">
+            <div className="fixed right-4 top-4 z-50">
+              <ThemeToggle />
+            </div>
+            <main>{children}</main>
+          </div>
         </ThemeProvider>
       </body>
     </html>

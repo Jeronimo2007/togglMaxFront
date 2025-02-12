@@ -22,45 +22,45 @@ const config: Config = {
         sans: ["var(--font-sans)"],
       },
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        border: '#A77EC7', // Texto secundario
+        input: '#A77EC7', // Texto secundario
+        ring: '#F79AFF', // Destacados y líneas
+        background: '#1E0E2F', // Fondo principal
+        foreground: '#E4CFF7', // Texto principal
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
+          DEFAULT: '#F79AFF', // Destacados y líneas
+          foreground: '#1E0E2F' // Fondo principal
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))'
+          DEFAULT: '#A77EC7', // Texto secundario
+          foreground: '#1E0E2F' // Fondo principal
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          DEFAULT: '#F79AFF', // Destacados y líneas
+          foreground: '#1E0E2F' // Fondo principal
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))'
+          DEFAULT: '#2C113A', // Paneles secundarios
+          foreground: '#A77EC7' // Texto secundario
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))'
+          DEFAULT: '#F79AFF', // Destacados y líneas
+          foreground: '#1E0E2F' // Fondo principal
         },
         popover: {
-          DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))'
+          DEFAULT: '#2C113A', // Paneles secundarios
+          foreground: '#E4CFF7' // Texto principal
         },
         card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))'
+          DEFAULT: '#2C113A', // Paneles secundarios
+          foreground: '#E4CFF7' // Texto principal
         },
         chart: {
-          '1': 'hsl(var(--chart-1))',
-          '2': 'hsl(var(--chart-2))',
-          '3': 'hsl(var(--chart-3))',
-          '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))'
+          '1': '#F79AFF', // Chart color 1
+          '2': '#A77EC7', // Chart color 2
+          '3': '#E4CFF7', // Chart color 3
+          '4': '#2C113A', // Chart color 4
+          '5': '#1E0E2F' // Chart color 5
         }
       },
       borderRadius: {
