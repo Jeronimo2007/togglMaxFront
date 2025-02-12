@@ -78,6 +78,7 @@
 @layer components {
   .custom-calendar table,
   .custom-calendar td {
-    border: 1px solid #E8D1F0!important; /* Rosado-violeta suave */
+    border: 1px solid rgba(232, 209, 240, 0.5)!important;
+     
   }
 }

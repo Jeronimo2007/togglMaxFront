@@ -202,8 +202,21 @@ export default function ReportPage() {
       <div className="h-[400px] bg-black p-4 rounded-lg shadow border border-gray-200 text-white">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
-            <XAxis dataKey="date" />
-            <YAxis />
+            <XAxis dataKey="date" 
+            stroke="#FFFFFF !important"
+            tick={{ fill: '#FFFFFF !important' }}
+            style={{
+              fontSize: '12px',
+              fill: '#FFFFFF !important',
+              color: '#FFFFFF !important'
+            }} />
+            <YAxis stroke="#FFFFFF !important"
+            tick={{ fill: '#FFFFFF !important' }}
+            style={{
+              fontSize: '12px',
+              fill: '#FFFFFF !important',
+              color: '#FFFFFF !important'
+            }}/>
             <Tooltip 
               formatter={(value: number) => formatDuration(value)}
               labelFormatter={(label) => `Fecha: ${label}`}
