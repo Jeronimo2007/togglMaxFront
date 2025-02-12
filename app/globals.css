@@ -76,21 +76,27 @@
   }
 }
 
-/* 🌸 Cambia los bordes del calendario a rosado violeta suave */
+
 @layer components {
+  /* Estilos del calendario */
   .custom-calendar table,
   .custom-calendar td {
-    border: 1px solid gray!important;
+    border: 1px solid gray !important;
+  }
 
+  /* Estilos de eventos */
   .fc-event {
-      background-color: #ac75cb !important;
-      border-color: rgba(172, 117, 203, 0.5) !important;
-      border-radius: 4px;
-      padding: 2px 4px;
-    }
-     
+    background-color: #ac75cb !important;
+    border-color: rgba(172, 117, 203, 0.5) !important;
+    border-radius: 4px;
+    padding: 2px 4px;
+  }
 
-  /* Nuevos estilos para Recharts */
+  .fc-event-main {
+    background-color: rgb(174, 119, 205) !important;
+  }
+
+  /* Estilos de Recharts */
   .recharts-cartesian-axis-tick-value {
     fill: #FFFFFF !important;
   }
@@ -116,6 +122,5 @@
 
   .recharts-tooltip-label {
     color: var(--foreground) !important;
-  }
   }
 }
