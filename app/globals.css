@@ -85,16 +85,17 @@
   }
 
   /* Estilos de eventos */
-  .fc-event {
-    background-color: #ac75cb !important;
-    border-color: rgba(172, 117, 203, 0.5) !important;
+  fc-event {
+    background-color: theme('colors.calendar.event.bg') !important;
+    border-color: theme('colors.calendar.event.border') !important;
     border-radius: 4px;
     padding: 2px 4px;
   }
 
   .fc-event-main {
-    background-color: rgb(174, 119, 205) !important;
+    background-color: theme('colors.calendar.event.bg') !important;
   }
+}
 
   /* Estilos de Recharts */
   .recharts-cartesian-axis-tick-value {

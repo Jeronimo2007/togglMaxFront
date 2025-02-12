@@ -24,9 +24,11 @@ const config: Config = {
       colors: {
 
         calendar: {
-          'event-bg': 'rgb(174 119 205)',         // Color de fondo del evento
-          'event-border': 'rgba(172, 117, 203, 0.5)', // Color del borde del evento
-          'grid-border': 'rgba(63, 52, 103, 0.2)',    // Color del borde de la grilla
+          event: {
+            bg: 'rgb(174, 119, 205)',          // Color de fondo del evento
+            border: 'rgba(172, 117, 203, 0.5)',  // Color del borde
+            text: '#ffffff'         // Color del texto
+          }
         },
         border: 'rgb(63,52,103) ', // Texto secundario
         input: '#A77EC7', // Texto secundario
