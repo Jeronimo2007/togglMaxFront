@@ -38,6 +38,8 @@
     --chart-3: #E4CFF7; /* Chart color 3 */
     --chart-4: #2C113A; /* Chart color 4 */
     --chart-5: #1E0E2F; /* Chart color 5 */
+
+    --border: rgb(63,52,103)
   }
 
   .dark {

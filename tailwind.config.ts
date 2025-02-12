@@ -22,7 +22,13 @@ const config: Config = {
         sans: ["var(--font-sans)"],
       },
       colors: {
-        border: '#A77EC7', // Texto secundario
+
+        calendar: {
+          'event-bg': 'rgb(174 119 205)',         // Color de fondo del evento
+          'event-border': 'rgba(172, 117, 203, 0.5)', // Color del borde del evento
+          'grid-border': 'rgba(63, 52, 103, 0.2)',    // Color del borde de la grilla
+        },
+        border: 'rgb(63,52,103) ', // Texto secundario
         input: '#A77EC7', // Texto secundario
         ring: '#F79AFF', // Destacados y líneas
         background: '#1E0E2F', // Fondo principal
