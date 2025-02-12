@@ -466,6 +466,7 @@ export default function Home() {
         events={events}
         dateClick={handleDateClick}
         eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+        eventClassNames="bg-[rgb(174, 119, 205)] border-accent text-primary-foreground"
       />
     
 
