@@ -1,0 +1,93 @@
+/* app/styles/fullcalendar-theme.css */
+
+/* Estilos base del calendario */
+.fc {
+    --fc-page-bg-color: rgb(15 23 42); /* slate-950 */
+    --fc-neutral-bg-color: rgb(30 41 59); /* slate-800 */
+    --fc-border-color: rgb(51 65 85); /* slate-700 */
+    --fc-today-bg-color: rgba(147, 51, 234, 0.15); /* Violeta rosa suave */
+    
+    /* Colores del texto */
+    --fc-event-text-color: #fff;
+    --fc-event-border-color: rgb(51 65 85); /* slate-700 */
+    --fc-event-bg-color: rgb(30 41 59); /* slate-800 */
+    
+    /* Colores de los botones y encabezados */
+    --fc-button-bg-color: rgb(30 41 59); /* slate-800 */
+    --fc-button-border-color: rgb(51 65 85); /* slate-700 */
+    --fc-button-hover-bg-color: rgb(51 65 85); /* slate-700 */
+    --fc-button-hover-border-color: rgb(71 85 105); /* slate-600 */
+    --fc-button-active-bg-color: rgb(71 85 105); /* slate-600 */
+    
+    /* Color del texto general */
+    color: rgb(226 232 240); /* slate-200 */
+  }
+  
+  /* Estilos para las celdas */
+  .fc td, .fc th {
+    border-color: var(--fc-border-color);
+  }
+  
+  /* Estilos para el día actual */
+  .fc .fc-daygrid-day.fc-day-today,
+  .fc .fc-timegrid-col.fc-day-today {
+    background-color: var(--fc-today-bg-color) !important;
+  }
+  
+  /* Estilos para los eventos */
+  .fc-event {
+    background-color: var(--fc-event-bg-color);
+    border-color: var(--fc-event-border-color);
+  }
+  
+  /* Estilos para los botones */
+  .fc .fc-button {
+    background-color: var(--fc-button-bg-color);
+    border-color: var(--fc-button-border-color);
+    color: rgb(226 232 240); /* slate-200 */
+  }
+  
+  .fc .fc-button:hover {
+    background-color: var(--fc-button-hover-bg-color);
+    border-color: var(--fc-button-hover-border-color);
+  }
+  
+  .fc .fc-button-primary:not(:disabled).fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active {
+    background-color: var(--fc-button-active-bg-color);
+  }
+  
+  /* Estilos para la vista de tiempo */
+  .fc-timegrid-slot {
+    background-color: var(--fc-page-bg-color);
+  }
+  
+  /* Estilos para el encabezado */
+  .fc-toolbar-title {
+    color: rgb(226 232 240); /* slate-200 */
+  }
+  
+  /* Estilos para las celdas de tiempo */
+  .fc-timegrid-slot-label {
+    color: rgb(148 163 184); /* slate-400 */
+  }
+  
+  /* Estilos para los nombres de los días */
+  .fc-col-header-cell {
+    background-color: rgb(30 41 59); /* slate-800 */
+    color: rgb(226 232 240); /* slate-200 */
+  }
+  
+  /* Estilos para el hover de eventos */
+  .fc-event:hover {
+    background-color: rgb(51 65 85); /* slate-700 */
+  }
+  
+  /* Estilos para la línea de tiempo actual */
+  .fc-timegrid-now-indicator-line {
+    border-color: rgb(168 85 247); /* purple-500 */
+  }
+  
+  .fc-timegrid-now-indicator-arrow {
+    border-color: rgb(168 85 247); /* purple-500 */
+  }

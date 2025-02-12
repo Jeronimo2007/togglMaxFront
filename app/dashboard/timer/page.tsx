@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import { EventClickArg } from '@fullcalendar/core';
+import "@/styles/fullcalendar-theme.css";
 
 interface Project {
   id: string;
@@ -448,22 +449,24 @@ export default function Home() {
         </Button>
       </div>
 
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }}
-        editable={false}
-        selectable
-        height="500px"
-        events={events}
-        dateClick={handleDateClick}
-        eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-      />
+      <div className="calendar-container bg-background dark:bg-slate-950">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          editable={false}
+          selectable
+          height="500px"
+          events={events}
+          dateClick={handleDateClick}
+          eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+        />
+    </div>
 
       {selectedEvent && (
         <div className="p-6 bg-gray-200 rounded-lg shadow-lg mt-6">
