@@ -17,6 +17,11 @@
   border-color: var(--fc-border-color) !important;
 }
 
+/* Eliminar la celda de "all-day" */
+.fc-daygrid-body .fc-daygrid-row:first-child {
+  display: none !important;
+}
+
 /* Asegurar que las celdas de los días tengan bordes bien definidos */
 .fc-daygrid-day {
   border-right: 1px solid var(--fc-border-color) !important;
