@@ -95,6 +95,22 @@
     background-color: theme('colors.calendar.event.bg') !important;
   }
 
+  .fc .fc-view-harness {
+    inset: auto !important; /* Esto sobrescribirá el inset:500px 0% -550px */
+    height: 100% !important;
+  }
+
+  /* Ajustar el z-index */
+  .fc-view-harness-active {
+    z-index: auto !important; /* O el valor que necesites */
+  }
+
+  /* Si necesitas ajustar el fondo */
+  .fc-timegrid,
+  .fc-daygrid {
+    background-color: your-color-here;
+  }
+
 
   /* Estilos de Recharts */
   .recharts-cartesian-axis-tick-value {
