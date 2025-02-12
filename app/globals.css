@@ -41,41 +41,43 @@
   }
 
   .dark {
-    --background: #1E0E2F; /* Fondo principal */
-    --foreground: #E4CFF7; /* Texto principal */
-
-    --card: #2C113A; /* Paneles secundarios */
-    --card-foreground: #E4CFF7; /* Texto principal */
-
-    --popover: #2C113A; /* Paneles secundarios */
-    --popover-foreground: #E4CFF7; /* Texto principal */
-
-    --primary: #F79AFF; /* Destacados y líneas */
-    --primary-foreground: #1E0E2F; /* Fondo principal */
-
-    --secondary: #A77EC7; /* Texto secundario */
-    --secondary-foreground: #1E0E2F; /* Fondo principal */
-
-    --muted: #2C113A; /* Paneles secundarios */
-    --muted-foreground: #A77EC7; /* Texto secundario */
-
-    --accent: #F79AFF; /* Destacados y líneas */
-    --accent-foreground: #1E0E2F; /* Fondo principal */
-
-    --destructive: #F79AFF; /* Destacados y líneas */
-    --destructive-foreground: #1E0E2F; /* Fondo principal */
-
-    --border: #A77EC7; /* Texto secundario */
-    --input: #A77EC7; /* Texto secundario */
-    --ring: #F79AFF; /* Destacados y líneas */
+    --background: #1E0E2F;
+    --foreground: #E4CFF7;
+    --card: #2C113A;
+    --card-foreground: #E4CFF7;
+    --popover: #2C113A;
+    --popover-foreground: #E4CFF7;
+    --primary: #F79AFF;
+    --primary-foreground: #1E0E2F;
+    --secondary: #A77EC7;
+    --secondary-foreground: #1E0E2F;
+    --muted: #2C113A;
+    --muted-foreground: #A77EC7;
+    --accent: #F79AFF;
+    --accent-foreground: #1E0E2F;
+    --destructive: #F79AFF;
+    --destructive-foreground: #1E0E2F;
+    --border: #A77EC7;
+    --input: #A77EC7;
+    --ring: #F79AFF;
   }
 }
 
 @layer base {
-  * {
+  /* Aplica border-border a todos los elementos excepto el calendario */
+  *:not(.custom-calendar *):not(.custom-calendar td) {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* 🌸 Cambia los bordes del calendario a rosado violeta suave */
+@layer components {
+  .custom-calendar table,
+  .custom-calendar td {
+    border: 1px solid #D6AEDD !important; /* Rosado-violeta suave */
   }
 }
