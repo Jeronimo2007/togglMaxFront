@@ -188,7 +188,7 @@ export default function ReportPage() {
         {summary.map((item, index) => (
           <div
             key={index}
-            className="p-4 bg-white rounded-lg shadow border border-gray-200"
+            className="p-4 bg-black rounded-lg shadow border border-black"
           >
             <h3 className="text-lg font-semibold mb-2">{item.project}</h3>
             <p className="text-gray-600">
@@ -199,7 +199,7 @@ export default function ReportPage() {
       </div>
 
       {/* Chart Section */}
-      <div className="h-[400px] bg-white p-4 rounded-lg shadow border border-gray-200">
+      <div className="h-[400px] bg-black p-4 rounded-lg shadow border border-gray-200">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
             <XAxis dataKey="date" />
@@ -214,23 +214,23 @@ export default function ReportPage() {
       </div>
 
       {/* Detailed List Section */}
-      <div className="bg-white rounded-lg shadow border border-gray-200">
+      <div className="bg-black rounded-lg shadow border border-black">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#D6AEDD] uppercase tracking-wider">
                   Fecha
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#D6AEDD] uppercase tracking-wider">
                   Proyecto
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#D6AEDD] uppercase tracking-wider">
                   Tiempo
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-black divide-y divide-gray-200">
               {reportData.map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">
