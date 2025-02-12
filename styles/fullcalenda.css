@@ -17,6 +17,40 @@
   border-color: var(--fc-border-color) !important;
 }
 
+/* Asegurar que las celdas de los días tengan bordes bien definidos */
+.fc-daygrid-day {
+  border-right: 1px solid var(--fc-border-color) !important;
+  border-bottom: 1px solid var(--fc-border-color) !important;
+}
+
+/* Corregir la separación de las columnas en la vista de semana y día */
+.fc-timegrid-slot {
+  border-bottom: 1px solid var(--fc-border-color) !important;
+}
+
+.fc-timegrid-slot-frame {
+  border-top: 1px solid var(--fc-border-color) !important;
+}
+
+/* Ajustar el header para que las columnas se alineen correctamente */
+.fc-col-header-cell {
+  border-right: 1px solid var(--fc-border-color) !important;
+}
+
+/* Evitar que las celdas pierdan estructura */
+.fc-daygrid-day-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* Asegurar que la vista semanal no tenga inconsistencias en la distribución */
+.fc-daygrid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 1fr;
+}
+
 /* Estilos para el día actual */
 .fc .fc-daygrid-day.fc-day-today,
 .fc .fc-timegrid-col.fc-day-today {
