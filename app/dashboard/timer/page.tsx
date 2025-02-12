@@ -469,7 +469,7 @@ export default function Home() {
     
 
       {selectedEvent && (
-        <div className="p-6 bg-gray-200 rounded-lg shadow-lg mt-6">
+        <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
           <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
           <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>

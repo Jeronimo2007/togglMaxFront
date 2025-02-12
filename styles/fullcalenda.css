@@ -115,7 +115,7 @@
 /* Ajustes de responsividad */
 .calendar-container {
   width: 100%;
-  overflow-x: auto;
+  overflow: auto;
   padding: 1rem;
   background-color: var(--fc-page-bg-color);
   border-radius: 0.5rem;
