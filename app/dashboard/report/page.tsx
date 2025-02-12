@@ -191,7 +191,7 @@ export default function ReportPage() {
             className="p-4 bg-black rounded-lg shadow border border-black"
           >
             <h3 className="text-lg font-semibold mb-2">{item.project}</h3>
-            <p className="text-gray-600">
+            <p className="text-white">
               Tiempo total: {formatDuration(item.total_seconds)}
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function ReportPage() {
       </div>
 
       {/* Chart Section */}
-      <div className="h-[400px] bg-black p-4 rounded-lg shadow border border-gray-200">
+      <div className="h-[400px] bg-black p-4 rounded-lg shadow border border-gray-200 text-white">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
             <XAxis dataKey="date" />
@@ -216,8 +216,8 @@ export default function ReportPage() {
       {/* Detailed List Section */}
       <div className="bg-black rounded-lg shadow border border-black">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-black">
+            <thead className="bg-black">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#D6AEDD] uppercase tracking-wider">
                   Fecha
@@ -230,7 +230,7 @@ export default function ReportPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-black divide-y divide-gray-200">
+            <tbody className="bg-black divide-y divide-black">
               {reportData.map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">
