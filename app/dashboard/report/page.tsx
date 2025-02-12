@@ -207,6 +207,11 @@ export default function ReportPage() {
             <Tooltip 
               formatter={(value: number) => formatDuration(value)}
               labelFormatter={(label) => `Fecha: ${label}`}
+              contentStyle={{ 
+                backgroundColor: '#1a1a1a', // Fondo oscuro para el tooltip
+                border: '1px solid #333',
+                color: '#FFFFFF' // Texto blanco en el tooltip
+              }}
             />
             <Bar dataKey="seconds" fill="#8884d8" name="Tiempo" />
           </BarChart>
