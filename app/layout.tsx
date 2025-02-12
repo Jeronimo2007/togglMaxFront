@@ -22,18 +22,20 @@ export const viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${fontSans.variable} font-sans antialiased`}>
+      <body className={`${fontSans.variable} font-sans antialiased min-h-screen bg-background dark:bg-slate-950`}>
         <ThemeProvider 
           attribute="class" 
           defaultTheme="dark" 
           enableSystem={false}
           disableTransitionOnChange
         >
-          <div className="relative min-h-screen bg-background">
+          <div className="relative min-h-screen bg-background dark:bg-slate-950">
             <div className="fixed right-4 top-4 z-50">
               <ThemeToggle />
             </div>
-            <main>{children}</main>
+            <main className="min-h-screen bg-background dark:bg-slate-950">
+              {children}
+            </main>
           </div>
         </ThemeProvider>
       </body>
