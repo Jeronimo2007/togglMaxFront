@@ -84,15 +84,19 @@
   }
 
   /* Estilos de eventos */
-  .fc-event {
-    background-color: theme('colors.calendar.event.bg') !important;
-    border-color: theme('colors.calendar.event.border') !important;
-    border-radius: 4px;
-    padding: 2px 4px;
+  .fc-event,
+  .fc-event-main {
+    background-color: rgb(146, 123, 229) !important;
+    border-color: rgba(146, 123, 229, 0.5) !important;
   }
 
-  .fc-event-main {
-    background-color: theme('colors.calendar.event.bg') !important;
+  .fc-v-event {
+    background-color: rgb(146, 123, 229) !important;
+    border-color: rgba(146, 123, 229, 0.5) !important;
+  }
+
+  .fc-timegrid-event-harness {
+    background-color: rgb(146, 123, 229) !important;
   }
 
   .fc .fc-view-harness {

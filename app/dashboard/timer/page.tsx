@@ -467,6 +467,11 @@ export default function Home() {
         dateClick={handleDateClick}
         eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
         eventClassNames="bg-[rgb(174, 119, 205)] border-accent text-primary-foreground"
+        eventDidMount={(info) => {
+          // Asegurarse que el estilo se aplique después de montar el evento
+          info.el.style.backgroundColor = 'rgb(146, 123, 229)';
+          info.el.style.borderColor = 'rgba(146, 123, 229, 0.5)';
+        }}
       />
     
 
