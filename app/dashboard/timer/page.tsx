@@ -466,6 +466,11 @@ export default function Home() {
         events={events}
         dateClick={handleDateClick}
         eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+        eventContent={(eventInfo) => (
+          <div className="bg-pink-200 text-pink-800 p-1 rounded">
+            {eventInfo.event.title}
+          </div>
+        )}
       />
     
 

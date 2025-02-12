@@ -78,6 +78,6 @@
 @layer components {
   .custom-calendar table,
   .custom-calendar td {
-    border: 1px solid #D6AEDD !important; /* Rosado-violeta suave */
+    border: 1px solid #E8D1F0!important; /* Rosado-violeta suave */
   }
 }
