@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import { EventClickArg } from '@fullcalendar/core';
-import "@/styles/fullcalendar-theme";
+import "@/styles/fullcalenda.css"
 
 interface Project {
   id: string;
