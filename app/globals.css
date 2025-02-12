@@ -78,7 +78,42 @@
 @layer components {
   .custom-calendar table,
   .custom-calendar td {
-    border: 1px solid rgba(232, 209, 240, 0.5)!important;
+    border: 1px solid gray!important;
+
+  .fc-event {
+      background-color: #ac75cb !important;
+      border-color: rgba(172, 117, 203, 0.5) !important;
+      border-radius: 4px;
+      padding: 2px 4px;
+    }
      
+
+  /* Nuevos estilos para Recharts */
+  .recharts-cartesian-axis-tick-value {
+    fill: #FFFFFF !important;
+  }
+
+  .recharts-cartesian-axis-line {
+    stroke: #FFFFFF !important;
+  }
+
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    stroke: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .recharts-text {
+    fill: #FFFFFF !important;
+  }
+
+  .recharts-default-tooltip {
+    background-color: var(--background) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--foreground) !important;
+  }
+
+  .recharts-tooltip-label {
+    color: var(--foreground) !important;
+  }
   }
 }
