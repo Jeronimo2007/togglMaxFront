@@ -449,7 +449,7 @@ export default function Home() {
         </Button>
       </div>
   
-      <div className="flex-1 min-h-[500px]">
+      
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -466,7 +466,7 @@ export default function Home() {
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
         />
-      </div>
+      
   
       {selectedEvent && (
         <div className="p-6 bg-gray-200 rounded-lg shadow-lg mt-6">
