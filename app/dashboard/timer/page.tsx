@@ -450,22 +450,23 @@ export default function Home() {
       </div>
 
       
-        <FullCalendar
-          ref={calendarRef}
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }}
-          editable={false}
-          selectable
-          height="500px"
-          events={events}
-          dateClick={handleDateClick}
-          eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-        />
+        
+      <FullCalendar
+        ref={calendarRef}
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="timeGridWeek"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }}
+        editable={false}
+        selectable
+        height="500px"
+        events={events}
+        dateClick={handleDateClick}
+        eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+      />
     
 
       {selectedEvent && (
