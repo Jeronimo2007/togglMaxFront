@@ -39,7 +39,6 @@
     --chart-4: #2C113A; /* Chart color 4 */
     --chart-5: #1E0E2F; /* Chart color 5 */
 
-    --border: rgb(63,52,103)
   }
 
   .dark {
@@ -85,7 +84,7 @@
   }
 
   /* Estilos de eventos */
-  fc-event {
+  .fc-event {
     background-color: theme('colors.calendar.event.bg') !important;
     border-color: theme('colors.calendar.event.border') !important;
     border-radius: 4px;
@@ -95,7 +94,7 @@
   .fc-event-main {
     background-color: theme('colors.calendar.event.bg') !important;
   }
-}
+
 
   /* Estilos de Recharts */
   .recharts-cartesian-axis-tick-value {
