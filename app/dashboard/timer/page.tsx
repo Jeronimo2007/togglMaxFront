@@ -403,11 +403,11 @@ export default function Home() {
   };
 
   return (
-    <div className="p-6 space-y-6 flex flex-col min-h-screen">
+    <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
         <h2 className="text-lg font-bold">Temporizador</h2>
         <span className="text-2xl">{formatTime(time)}</span>
-  
+
         <div className="space-x-2">
           <Button onClick={() => setIsRunning(!isRunning)}>
             {isRunning ? "Pause" : "Start"}
@@ -415,7 +415,7 @@ export default function Home() {
           <Button onClick={saveTimerEvent}>Stop & Save</Button>
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
-  
+
         <div className="mt-4">
           <label className="block text-sm">Proyecto:</label>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -431,7 +431,7 @@ export default function Home() {
             </SelectContent>
           </Select>
         </div>
-  
+
         <div className="mt-4">
           <label className="block text-sm">Descripción de la tarea:</label>
           <Textarea
@@ -440,7 +440,7 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
-  
+
         <Button 
           onClick={() => setIsProjectModalOpen(true)}
           className="w-full mt-4"
@@ -448,7 +448,7 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-  
+
       
         <FullCalendar
           ref={calendarRef}
@@ -461,13 +461,13 @@ export default function Home() {
           }}
           editable={false}
           selectable
-          height="100%"
+          height="500px"
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
         />
-      
-  
+    
+
       {selectedEvent && (
         <div className="p-6 bg-gray-200 rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
@@ -485,11 +485,13 @@ export default function Home() {
           </div>
         </div>
       )}
-  
+
+
+
       <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 rounded-lg p-6 w-[95vw] max-w-md z-[49]">
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
             <Dialog.Title className="text-lg font-bold mb-4">
               Crear Nuevo Proyecto
             </Dialog.Title>
@@ -514,7 +516,7 @@ export default function Home() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-  
+
       <AddEventModal
         isOpen={newEvent !== null}
         onClose={() => setNewEvent(null)}
@@ -525,5 +527,4 @@ export default function Home() {
       />
     </div>
   );
-  
 }
