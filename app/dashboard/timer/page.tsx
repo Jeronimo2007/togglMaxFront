@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import { EventClickArg } from '@fullcalendar/core';
-//import "@/styles/fullcalenda.css"
 
 interface Project {
   id: string;
@@ -153,6 +152,7 @@ export default function Home() {
   const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   const formatTime = (seconds: number): string => {
@@ -195,11 +195,10 @@ export default function Home() {
   };
 
   const createProject = async () => {
-    if (!newProjectName.trim()) {
-      alert("Por favor ingrese un nombre de proyecto");
+    if (!newProjectName.trim() || hourlyRate === null) {
+      alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
       return;
     }
-
 
     setIsCreatingProject(true);
     try {
@@ -210,7 +209,8 @@ export default function Home() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          project_name: newProjectName
+          project_name: newProjectName,
+          hourly_rate: hourlyRate
         })
       });
 
@@ -220,6 +220,7 @@ export default function Home() {
 
       await fetchProjects();
       setNewProjectName("");
+      setHourlyRate(null);
       setIsProjectModalOpen(false);
       alert("Proyecto creado exitosamente");
     } catch (error) {
@@ -509,6 +510,15 @@ export default function Home() {
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   placeholder="Ingrese el nombre del proyecto"
+                />
+              </div>
+              <div>
+                <Label>Tarifa por Hora</Label>
+                <Input
+                  type="number"
+                  value={hourlyRate !== null ? hourlyRate : ""}
+                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  placeholder="Ingrese su tarifa por hora"
                 />
               </div>
               <div className="flex justify-end space-x-2">

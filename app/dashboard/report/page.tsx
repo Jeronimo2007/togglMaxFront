@@ -18,6 +18,7 @@ interface ReportData {
 interface SummaryData {
   project: string;
   total_seconds: number;
+  total_earned: number;
 }
 
 interface ApiResponse {
@@ -28,14 +29,13 @@ interface ApiResponse {
 }
 
 export default function ReportPage() {
-  // Initialize with current week's start and end dates
   const [startDate, setStartDate] = useState(() => {
-    const start = startOfWeek(new Date(), { weekStartsOn: 1 }); // 1 represents Monday
+    const start = startOfWeek(new Date(), { weekStartsOn: 1 });
     return format(start, "yyyy-MM-dd");
   });
-  
+
   const [endDate, setEndDate] = useState(() => {
-    const end = endOfWeek(new Date(), { weekStartsOn: 1 }); // 1 represents Monday
+    const end = endOfWeek(new Date(), { weekStartsOn: 1 });
     return format(end, "yyyy-MM-dd");
   });
 
@@ -56,6 +56,10 @@ export default function ReportPage() {
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
     return `${hours}h ${minutes}m ${secs}s`;
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toFixed(2)}`;
   };
 
   const fetchReport = async () => {
@@ -193,6 +197,9 @@ export default function ReportPage() {
             <h3 className="text-lg font-semibold mb-2">{item.project}</h3>
             <p className="text-white">
               Tiempo total: {formatDuration(item.total_seconds)}
+            </p>
+            <p className="text-white">
+              Total ganado: {formatCurrency(item.total_earned)}
             </p>
           </div>
         ))}
