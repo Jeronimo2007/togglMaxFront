@@ -210,7 +210,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           project_name: newProjectName,
-          hourly_rate: hourlyRate
+          bill: hourlyRate
         })
       });
 
