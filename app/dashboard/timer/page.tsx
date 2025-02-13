@@ -91,6 +91,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
               <Input
                 type="datetime-local"
                 required
+                className="!bg-[#aa69b9] !text-black"
                 value={newEvent?.end ? adjustTimeZone(newEvent.end) : ''}
                 onChange={(e) => {
                   const date = new Date(e.target.value);
