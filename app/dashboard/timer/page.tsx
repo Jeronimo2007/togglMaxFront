@@ -16,6 +16,7 @@ import { EventClickArg } from '@fullcalendar/core';
 interface Project {
   id: string;
   name: string;
+  color: string; // New property for project color
 }
 
 interface NewEvent {
@@ -146,7 +147,11 @@ export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([
+    { id: '1', name: 'Project A', color: '#FF5733' },
+    { id: '2', name: 'Project B', color: '#33FF57' },
+    { id: '3', name: 'Project C', color: '#3357FF' }
+  ]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [taskDescription, setTaskDescription] = useState<string>("");
   const [events, setEvents] = useState<Event[]>([]);
@@ -448,7 +453,7 @@ export default function Home() {
         </Button>
       </div>
 
-      <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'auto', minHeight: '500px' }}>
+      <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -463,11 +468,16 @@ export default function Home() {
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-          eventClassNames="bg-[rgb(174, 119, 205)] border-accent text-primary-foreground"
+          eventClassNames={({ event }) => {
+            const project = projects.find(p => p.name === event.extendedProps.project);
+            return project ? `bg-[${project.color}] border-accent text-primary-foreground` : '';
+          }}
           eventDidMount={(info) => {
-            // Asegurarse que el estilo se aplique después de montar el evento
-            info.el.style.backgroundColor = 'rgb(146, 123, 229)';
-            info.el.style.borderColor = 'rgba(146, 123, 229, 0.5)';
+            const project = projects.find(p => p.name === info.event.extendedProps.project);
+            if (project) {
+              info.el.style.backgroundColor = project.color;
+              info.el.style.borderColor = project.color;
+            }
           }}
         />
       </div>
