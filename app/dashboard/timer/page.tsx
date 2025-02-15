@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
@@ -11,10 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
-import { DateClickArg} from '@fullcalendar/interaction';
+import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from '@fullcalendar/core';
-import { Trash } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -528,7 +527,7 @@ export default function Home() {
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
           eventClassNames={({ event }) => {
             const project = projects.find(p => p.name === event.extendedProps.project);
-            return project ? `bg-[${project.color}] border-accent text-primary-foreground` : '';
+            return project ? `border-accent text-primary-foreground` : '';
           }}
           eventDidMount={(info) => {
             const project = projects.find(p => p.name === info.event.extendedProps.project);
