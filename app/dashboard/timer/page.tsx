@@ -1,5 +1,6 @@
-"use client";
-import { useRef, useState, useEffect } from "react";
+'use client';
+
+import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -465,21 +466,21 @@ export default function Home() {
             <SelectContent>
               {projects.map((project) => (
                 <SelectItem key={project.id} value={project.name}>
-                  <div className="flex justify-between items-center">
-                    <span>{project.name}</span>
-                    <Trash
-                      className="text-red-500 cursor-pointer ml-auto"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevents the click from selecting the project
-                        deleteProject(project.name);
-                      }}
-                    />
-                  </div>
+                  {project.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
+
+        {selectedProject && (
+          <Button
+            onClick={() => deleteProject(selectedProject)}
+            className="w-full mt-2 bg-red-500 text-white hover:bg-red-700"
+          >
+            Eliminar Proyecto
+          </Button>
+        )}
 
         <div className="mt-4">
           <label className="block text-sm">Descripción de la tarea:</label>
@@ -520,8 +521,8 @@ export default function Home() {
           eventDidMount={(info) => {
             const project = projects.find(p => p.name === info.event.extendedProps.project);
             if (project) {
-              info.el.style.backgroundColor = project.color;
-              info.el.style.borderColor = project.color;
+              info.el.style.backgroundColor = `${project.color} !important`;
+              info.el.style.borderColor = `${project.color} !important`;
             }
           }}
         />
