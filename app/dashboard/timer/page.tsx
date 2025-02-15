@@ -466,10 +466,13 @@ export default function Home() {
               {projects.map((project) => (
                 <SelectItem key={project.id} value={project.name}>
                   <div className="flex justify-between items-center">
-                    {project.name}
+                    <span>{project.name}</span>
                     <Trash
-                      className="text-red-500 cursor-pointer"
-                      onClick={() => deleteProject(project.name)}
+                      className="text-red-500 cursor-pointer ml-auto"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevents the click from selecting the project
+                        deleteProject(project.name);
+                      }}
                     />
                   </div>
                 </SelectItem>
