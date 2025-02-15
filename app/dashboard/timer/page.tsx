@@ -16,7 +16,7 @@ import { EventClickArg } from '@fullcalendar/core';
 interface Project {
   id: string;
   name: string;
-  color: string; // New property for project color
+  color: string;
 }
 
 interface NewEvent {
@@ -405,6 +405,26 @@ export default function Home() {
       alert("Error de conexión al servidor");
     }
   };
+
+  const generateHarmoniousColors = (numColors: number): string[] => {
+    const colors = [];
+    const hueStep = 360 / numColors;
+    for (let i = 0; i < numColors; i++) {
+      const hue = i * hueStep;
+      colors.push(`hsl(${hue}, 70%, 50%)`);
+    }
+    return colors;
+  };
+
+  useEffect(() => {
+    const colors = generateHarmoniousColors(projects.length);
+    setProjects((prevProjects) =>
+      prevProjects.map((project, index) => ({
+        ...project,
+        color: colors[index],
+      }))
+    );
+  }, [projects.length]);
 
   return (
     <div className="p-6 space-y-6">
