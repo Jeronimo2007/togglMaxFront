@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
-import { DateClickArg } from '@fullcalendar/interaction';
+import { DateClickArg} from '@fullcalendar/interaction';
+import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from '@fullcalendar/core';
 import { Trash } from 'lucide-react';
 
@@ -361,6 +362,15 @@ export default function Home() {
     });
   };
 
+  const handleSelect = (info: DateSelectArg): void => {
+    setNewEvent({
+      start: info.start,
+      end: info.end,
+      project: "",
+      descripcion: "",
+    });
+  };
+
   const saveNewEvent = async (): Promise<void> => {
     if (!newEvent?.project || !newEvent?.descripcion?.trim()) {
       alert("Por favor, completa todos los campos");
@@ -512,6 +522,7 @@ export default function Home() {
           }}
           editable={false}
           selectable
+          select={handleSelect}
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
