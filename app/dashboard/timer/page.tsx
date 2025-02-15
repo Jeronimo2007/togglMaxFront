@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import { EventClickArg } from '@fullcalendar/core';
+import { Trash } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -147,11 +148,7 @@ export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [projects, setProjects] = useState<Project[]>([
-    { id: '1', name: 'Project A', color: '#FF5733' },
-    { id: '2', name: 'Project B', color: '#33FF57' },
-    { id: '3', name: 'Project C', color: '#3357FF' }
-  ]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [taskDescription, setTaskDescription] = useState<string>("");
   const [events, setEvents] = useState<Event[]>([]);
@@ -200,6 +197,31 @@ export default function Home() {
     }
   };
 
+  const deleteProject = async (projectName: string): Promise<void> => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/delete/${projectName}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (response.ok) {
+        fetchProjects(); // Actualizar la lista de proyectos
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al eliminar el proyecto");
+      }
+    } catch (error) {
+      console.error("Error al eliminar el proyecto:", error);
+      alert("Error de conexión al servidor");
+    }
+  };
+
   const createProject = async () => {
     if (!newProjectName.trim() || hourlyRate === null) {
       alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
@@ -243,7 +265,11 @@ export default function Home() {
       });
       const data = await response.json();
       if (data.status === "success") {
-        setProjects(data.data);
+        const colors = generateHarmoniousColors(data.data.length);
+        setProjects(data.data.map((project: any, index: number) => ({
+          ...project,
+          color: colors[index],
+        })));
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -416,16 +442,6 @@ export default function Home() {
     return colors;
   };
 
-  useEffect(() => {
-    const colors = generateHarmoniousColors(projects.length);
-    setProjects((prevProjects) =>
-      prevProjects.map((project, index) => ({
-        ...project,
-        color: colors[index],
-      }))
-    );
-  }, [projects.length]);
-
   return (
     <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
@@ -449,7 +465,13 @@ export default function Home() {
             <SelectContent>
               {projects.map((project) => (
                 <SelectItem key={project.id} value={project.name}>
-                  {project.name}
+                  <div className="flex justify-between items-center">
+                    {project.name}
+                    <Trash
+                      className="text-red-500 cursor-pointer"
+                      onClick={() => deleteProject(project.name)}
+                    />
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
