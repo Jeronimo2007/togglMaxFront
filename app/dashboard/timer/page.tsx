@@ -183,7 +183,6 @@ export default function Home() {
       });
 
       if (response.ok) {
-        alert("Evento eliminado correctamente");
         setSelectedEvent(null);
         fetchEvents(); // Actualizar la lista de eventos
       } else {
@@ -224,7 +223,6 @@ export default function Home() {
       setNewProjectName("");
       setHourlyRate(null);
       setIsProjectModalOpen(false);
-      alert("Proyecto creado exitosamente");
     } catch (error) {
       console.error('Error:', error);
       alert('Error al crear el proyecto');
@@ -357,7 +355,6 @@ export default function Home() {
       });
 
       if (response.ok) {
-        alert("Evento guardado correctamente");
         setNewEvent(null);
         fetchEvents();
       } else {
@@ -391,7 +388,6 @@ export default function Home() {
       });
 
       if (response.ok) {
-        alert("Evento guardado correctamente");
         setTime(0);
         setIsRunning(false);
         setTaskDescription("");
@@ -452,31 +448,29 @@ export default function Home() {
         </Button>
       </div>
 
-      
-        
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        }}
-        editable={false}
-        selectable
-        height="500px"
-        events={events}
-        dateClick={handleDateClick}
-        eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-        eventClassNames="bg-[rgb(174, 119, 205)] border-accent text-primary-foreground"
-        eventDidMount={(info) => {
-          // Asegurarse que el estilo se aplique después de montar el evento
-          info.el.style.backgroundColor = 'rgb(146, 123, 229)';
-          info.el.style.borderColor = 'rgba(146, 123, 229, 0.5)';
-        }}
-      />
-    
+      <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'auto', minHeight: '500px' }}>
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          editable={false}
+          selectable
+          events={events}
+          dateClick={handleDateClick}
+          eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+          eventClassNames="bg-[rgb(174, 119, 205)] border-accent text-primary-foreground"
+          eventDidMount={(info) => {
+            // Asegurarse que el estilo se aplique después de montar el evento
+            info.el.style.backgroundColor = 'rgb(146, 123, 229)';
+            info.el.style.borderColor = 'rgba(146, 123, 229, 0.5)';
+          }}
+        />
+      </div>
 
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
@@ -495,8 +489,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-
 
       <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
         <Dialog.Portal>
