@@ -213,6 +213,7 @@ export default function Home() {
 
       if (response.ok) {
         fetchProjects(); // Actualizar la lista de proyectos
+        fetchEvents(); // Actualizar la lista de eventos
       } else {
         const errorData = await response.json();
         alert(errorData.detail || "Error al eliminar el proyecto");
@@ -521,8 +522,8 @@ export default function Home() {
           eventDidMount={(info) => {
             const project = projects.find(p => p.name === info.event.extendedProps.project);
             if (project) {
-              info.el.style.backgroundColor = `${project.color} !important`;
-              info.el.style.borderColor = `${project.color} !important`;
+              info.el.style.backgroundColor = project.color;
+              info.el.style.borderColor = project.color;
             }
           }}
         />
