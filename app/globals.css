@@ -38,6 +38,7 @@
     --chart-3: #E4CFF7; /* Chart color 3 */
     --chart-4: #2C113A; /* Chart color 4 */
     --chart-5: #1E0E2F; /* Chart color 5 */
+
   }
 
   .dark {
@@ -74,37 +75,38 @@
   }
 }
 
+
 @layer components {
   /* Estilos del calendario */
   .custom-calendar table,
   .custom-calendar td {
-    border: 1px solid gray;
+    border: 1px solid gray !important;
   }
 
   /* Estilos de eventos */
   .fc-event,
   .fc-event-main {
-    background-color: rgb(146, 123, 229);
-    border-color: rgba(146, 123, 229, 0.5);
+    background-color: rgb(146, 123, 229) !important;
+    border-color: rgba(146, 123, 229, 0.5) !important;
   }
 
   .fc-v-event {
-    background-color: rgb(146, 123, 229);
-    border-color: rgba(146, 123, 229, 0.5);
+    background-color: rgb(146, 123, 229) !important;
+    border-color: rgba(146, 123, 229, 0.5) !important;
   }
 
   .fc-timegrid-event-harness {
-    background-color: rgb(146, 123, 229);
+    background-color: rgb(146, 123, 229) !important;
   }
 
   .fc .fc-view-harness {
-    inset: auto; /* Esto sobrescribirá el inset:500px 0% -550px */
-    height: 100%;
+    inset: auto !important; /* Esto sobrescribirá el inset:500px 0% -550px */
+    height: 100% !important;
   }
 
   /* Ajustar el z-index */
   .fc-view-harness-active {
-    z-index: auto; /* O el valor que necesites */
+    z-index: auto !important; /* O el valor que necesites */
   }
 
   /* Si necesitas ajustar el fondo */
@@ -113,31 +115,32 @@
     background-color: your-color-here;
   }
 
+
   /* Estilos de Recharts */
   .recharts-cartesian-axis-tick-value {
-    fill: #FFFFFF;
+    fill: #FFFFFF !important;
   }
 
   .recharts-cartesian-axis-line {
-    stroke: #FFFFFF;
+    stroke: #FFFFFF !important;
   }
 
   .recharts-cartesian-grid-horizontal line,
   .recharts-cartesian-grid-vertical line {
-    stroke: rgba(255, 255, 255, 0.1);
+    stroke: rgba(255, 255, 255, 0.1) !important;
   }
 
   .recharts-text {
-    fill: #FFFFFF;
+    fill: #FFFFFF !important;
   }
 
   .recharts-default-tooltip {
-    background-color: var(--background);
-    border: 1px solid var(--border);
-    color: var(--foreground);
+    background-color: var(--background) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--foreground) !important;
   }
 
   .recharts-tooltip-label {
-    color: var(--foreground);
+    color: var(--foreground) !important;
   }
 }
