@@ -163,14 +163,15 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [projectColor, setProjectColor] = useState<string>("#000000");
 
+  // Function to apply colors to events
   const applyEventColors = () => {
     if (!calendarRef.current) return;
     
     const calendarApi = calendarRef.current.getApi();
     const currentEvents = calendarApi.getEvents();
-
+  
     currentEvents.forEach(event => {
-      const project = projectsRef.current.find(p => p.name === event.extendedProps.project);
+      const project = projects.find(p => p.name === event.extendedProps.project);
       if (project) {
         event.setProp('backgroundColor', project.color);
         event.setProp('borderColor', project.color);
@@ -321,7 +322,8 @@ export default function Home() {
         }));
 
         setEvents(formattedEvents);
-        setTimeout(applyEventColors, 0); // Apply colors after setting events
+        // Removed setTimeout(applyEventColors, 0); 
+        // Colors will be applied via the useEffect that watches "events".
       }
     } catch (error) {
       console.error("Error al obtener eventos:", error);
@@ -351,11 +353,12 @@ export default function Home() {
     };
   }, []);
 
+  // Re-apply event colors whenever projects or events change
   useEffect(() => {
-    if (projects.length > 0) {
+    if (projects.length > 0 && events.length > 0) {
       applyEventColors();
     }
-  }, [projects]);
+  }, [projects, events]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -538,6 +541,7 @@ export default function Home() {
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
           datesSet={applyEventColors}
           eventDidMount={(info) => {
+            // Using projectsRef to style event element when mounted
             const project = projectsRef.current.find(p => p.name === info.event.extendedProps.project);
             if (project) {
               info.el.style.backgroundColor = project.color;
