@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -14,6 +12,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from '@fullcalendar/core';
+import { SketchPicker } from 'react-color';
 
 interface Project {
   id: string;
@@ -160,6 +159,7 @@ export default function Home() {
   const [newProjectName, setNewProjectName] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [projectColor, setProjectColor] = useState<string>("#000000");
 
   const applyEventColors = () => {
     if (!calendarRef.current) return;
@@ -256,7 +256,8 @@ export default function Home() {
         },
         body: JSON.stringify({
           project_name: newProjectName,
-          bill: hourlyRate
+          bill: hourlyRate,
+          color: projectColor
         })
       });
 
@@ -267,6 +268,7 @@ export default function Home() {
       await fetchProjects();
       setNewProjectName("");
       setHourlyRate(null);
+      setProjectColor("#000000");
       setIsProjectModalOpen(false);
     } catch (error) {
       console.error('Error:', error);
@@ -283,13 +285,8 @@ export default function Home() {
       });
       const data = await response.json();
       if (data.status === "success") {
-        const colors = generateHarmoniousColors(data.data.length);
-        const projectsWithColors = data.data.map((project: any, index: number) => ({
-          ...project,
-          color: colors[index],
-        }));
-        setProjects(projectsWithColors);
-        projectsRef.current = projectsWithColors;
+        setProjects(data.data);
+        projectsRef.current = data.data;
         applyEventColors();
       }
     } catch (error) {
@@ -463,16 +460,6 @@ export default function Home() {
     }
   };
 
-  const generateHarmoniousColors = (numColors: number): string[] => {
-    const colors = [];
-    const hueStep = 360 / numColors;
-    for (let i = 0; i < numColors; i++) {
-      const hue = i * hueStep;
-      colors.push(`hsl(${hue}, 70%, 50%)`);
-    }
-    return colors;
-  };
-
   return (
     <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
@@ -599,6 +586,13 @@ export default function Home() {
                   value={hourlyRate !== null ? hourlyRate : ""}
                   onChange={(e) => setHourlyRate(Number(e.target.value))}
                   placeholder="Ingrese su tarifa por hora"
+                />
+              </div>
+              <div>
+                <Label>Color del Proyecto</Label>
+                <SketchPicker
+                  color={projectColor}
+                  onChangeComplete={(color) => setProjectColor(color.hex)}
                 />
               </div>
               <div className="flex justify-end space-x-2">
