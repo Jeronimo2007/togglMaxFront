@@ -147,6 +147,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
 
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
+  const projectsRef = useRef<Project[]>([]);
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -159,6 +160,21 @@ export default function Home() {
   const [newProjectName, setNewProjectName] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+  const applyEventColors = () => {
+    if (!calendarRef.current) return;
+    
+    const calendarApi = calendarRef.current.getApi();
+    const currentEvents = calendarApi.getEvents();
+
+    currentEvents.forEach(event => {
+      const project = projectsRef.current.find(p => p.name === event.extendedProps.project);
+      if (project) {
+        event.setProp('backgroundColor', project.color);
+        event.setProp('borderColor', project.color);
+      }
+    });
+  };
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -187,7 +203,7 @@ export default function Home() {
 
       if (response.ok) {
         setSelectedEvent(null);
-        fetchEvents(); // Actualizar la lista de eventos
+        fetchEvents();
       } else {
         const errorData = await response.json();
         alert(errorData.detail || "Error al eliminar el evento");
@@ -212,8 +228,8 @@ export default function Home() {
       });
 
       if (response.ok) {
-        fetchProjects(); // Actualizar la lista de proyectos
-        fetchEvents(); // Actualizar la lista de eventos
+        fetchProjects();
+        fetchEvents();
       } else {
         const errorData = await response.json();
         alert(errorData.detail || "Error al eliminar el proyecto");
@@ -268,10 +284,13 @@ export default function Home() {
       const data = await response.json();
       if (data.status === "success") {
         const colors = generateHarmoniousColors(data.data.length);
-        setProjects(data.data.map((project: any, index: number) => ({
+        const projectsWithColors = data.data.map((project: any, index: number) => ({
           ...project,
           color: colors[index],
-        })));
+        }));
+        setProjects(projectsWithColors);
+        projectsRef.current = projectsWithColors;
+        applyEventColors();
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -303,9 +322,7 @@ export default function Home() {
         }));
 
         setEvents(formattedEvents);
-        if (calendarRef.current) {
-          calendarRef.current.getApi().refetchEvents();
-        }
+        setTimeout(applyEventColors, 0);
       }
     } catch (error) {
       console.error("Error al obtener eventos:", error);
@@ -323,20 +340,23 @@ export default function Home() {
       fetchEvents();
     };
 
-    // Cargar datos iniciales
     fetchProjects();
     fetchEvents();
 
-    // Agregar event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
 
-    // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
+
+  useEffect(() => {
+    if (projects.length > 0) {
+      applyEventColors();
+    }
+  }, [projects]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -527,12 +547,9 @@ export default function Home() {
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-          eventClassNames={({ event }) => {
-            const project = projects.find(p => p.name === event.extendedProps.project);
-            return project ? `border-accent text-primary-foreground` : '';
-          }}
+          datesSet={applyEventColors}
           eventDidMount={(info) => {
-            const project = projects.find(p => p.name === info.event.extendedProps.project);
+            const project = projectsRef.current.find(p => p.name === info.event.extendedProps.project);
             if (project) {
               info.el.style.backgroundColor = project.color;
               info.el.style.borderColor = project.color;
