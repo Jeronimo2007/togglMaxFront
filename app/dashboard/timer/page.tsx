@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext, createContext } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -14,6 +14,19 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from '@fullcalendar/core';
+
+// Context to persist timer state
+const TimerContext = createContext<{
+  time: number;
+  isRunning: boolean;
+  setTime: React.Dispatch<React.SetStateAction<number>>;
+  setIsRunning: React.Dispatch<React.SetStateAction<boolean>>;
+}>({
+  time: 0,
+  isRunning: false,
+  setTime: () => {},
+  setIsRunning: () => {},
+});
 
 interface Project {
   id: string;
@@ -148,8 +161,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
   const projectsRef = useRef<Project[]>([]);
-  const [time, setTime] = useState<number>(0);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [taskDescription, setTaskDescription] = useState<string>("");
@@ -160,6 +171,8 @@ export default function Home() {
   const [newProjectName, setNewProjectName] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+
+  const { time, isRunning, setTime, setIsRunning } = useContext(TimerContext);
 
   const applyEventColors = () => {
     if (!calendarRef.current) return;
@@ -625,3 +638,15 @@ export default function Home() {
     </div>
   );
 }
+
+// TimerProvider to wrap the component and provide context
+export const TimerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [time, setTime] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
+
+  return (
+    <TimerContext.Provider value={{ time, isRunning, setTime, setIsRunning }}>
+      {children}
+    </TimerContext.Provider>
+  );
+};
