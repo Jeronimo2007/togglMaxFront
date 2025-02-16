@@ -289,7 +289,7 @@ export default function Home() {
       if (data.status === "success") {
         setProjects(data.data);
         projectsRef.current = data.data;
-        applyEventColors();
+        applyEventColors(); // Ensure colors are applied after fetching projects
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -321,7 +321,7 @@ export default function Home() {
         }));
 
         setEvents(formattedEvents);
-        setTimeout(applyEventColors, 0);
+        setTimeout(applyEventColors, 0); // Apply colors after setting events
       }
     } catch (error) {
       console.error("Error al obtener eventos:", error);
