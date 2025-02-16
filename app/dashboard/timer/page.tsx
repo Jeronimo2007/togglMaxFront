@@ -1,7 +1,6 @@
-
 'use client'
 
-import React, { useRef, useState, useEffect, useContext } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -15,7 +14,6 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from '@fullcalendar/core';
-import { TimerProvider, TimerContext } from './TimerProvider'; 
 
 interface Project {
   id: string;
@@ -147,9 +145,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
   );
 };
 
-const Home: React.FC = () => {
+export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
   const projectsRef = useRef<Project[]>([]);
+  const [time, setTime] = useState<number>(0);
+  const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [taskDescription, setTaskDescription] = useState<string>("");
@@ -160,8 +160,6 @@ const Home: React.FC = () => {
   const [newProjectName, setNewProjectName] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
-
-  const { time, isRunning, setTime, setIsRunning } = useContext(TimerContext);
 
   const applyEventColors = () => {
     if (!calendarRef.current) return;
@@ -476,158 +474,154 @@ const Home: React.FC = () => {
   };
 
   return (
-    <TimerProvider>
-      <div className="p-6 space-y-6">
-        <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
-          <h2 className="text-lg font-bold">Temporizador</h2>
-          <span className="text-2xl">{formatTime(time)}</span>
+    <div className="p-6 space-y-6">
+      <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
+        <h2 className="text-lg font-bold">Temporizador</h2>
+        <span className="text-2xl">{formatTime(time)}</span>
 
-          <div className="space-x-2">
-            <Button onClick={() => setIsRunning(!isRunning)}>
-              {isRunning ? "Pause" : "Start"}
-            </Button>
-            <Button onClick={saveTimerEvent}>Stop & Save</Button>
-            <Button onClick={() => setTime(0)}>Reset Time</Button>
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm">Proyecto:</label>
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccionar proyecto" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.name}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedProject && (
-            <div className="flex justify-start mt-2">
-              <Button
-                onClick={() => deleteProject(selectedProject)}
-                className="bg-red-500 text-white hover:bg-red-700 text-sm"
-              >
-                Eliminar Proyecto
-              </Button>
-            </div>
-          )}
-
-          <div className="mt-4">
-            <label className="block text-sm">Descripción de la tarea (Opcional):</label>
-            <Textarea
-              placeholder="Describe tu tarea..."
-              value={taskDescription}
-              onChange={(e) => setTaskDescription(e.target.value)}
-            />
-          </div>
-
-          <Button 
-            onClick={() => setIsProjectModalOpen(true)}
-            className="w-full mt-4"
-          >
-            Crear Nuevo Proyecto
+        <div className="space-x-2">
+          <Button onClick={() => setIsRunning(!isRunning)}>
+            {isRunning ? "Pause" : "Start"}
           </Button>
+          <Button onClick={saveTimerEvent}>Stop & Save</Button>
+          <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
 
-        <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
-            headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
-            }}
-            editable={false}
-            selectable
-            select={handleSelect}
-            events={events}
-            dateClick={handleDateClick}
-            eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-            datesSet={applyEventColors}
-            eventDidMount={(info) => {
-              const project = projectsRef.current.find(p => p.name === info.event.extendedProps.project);
-              if (project) {
-                info.el.style.backgroundColor = project.color;
-                info.el.style.borderColor = project.color;
-              }
-            }}
-          />
+        <div className="mt-4">
+          <label className="block text-sm">Proyecto:</label>
+          <Select value={selectedProject} onValueChange={setSelectedProject}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar proyecto" />
+            </SelectTrigger>
+            <SelectContent>
+              {projects.map((project) => (
+                <SelectItem key={project.id} value={project.name}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {selectedEvent && (
-          <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
-            <h2 className="text-lg font-bold">Detalles del Evento</h2>
-            <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
-            <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
-            <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || 'Sin descripción'}</p>
-            <div className="flex justify-between mt-4">
-              <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
-              <Button 
-                onClick={() => deleteEvent(selectedEvent.id)} 
-                className="bg-red-500 text-white hover:bg-red-700"
-              >
-                Eliminar Evento
-              </Button>
-            </div>
+        {selectedProject && (
+          <div className="flex justify-start mt-2">
+            <Button
+              onClick={() => deleteProject(selectedProject)}
+              className="bg-red-500 text-white hover:bg-red-700 text-sm"
+            >
+              Eliminar Proyecto
+            </Button>
           </div>
         )}
 
-        <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
-              <Dialog.Title className="text-lg font-bold mb-4">
-                Crear Nuevo Proyecto
-              </Dialog.Title>
-              <div className="space-y-4">
-                <div>
-                  <Label>Nombre del Proyecto</Label>
-                  <Input
-                    value={newProjectName}
-                    onChange={(e) => setNewProjectName(e.target.value)}
-                    placeholder="Ingrese el nombre del proyecto"
-                  />
-                </div>
-                <div>
-                  <Label>Tarifa por Hora</Label>
-                  <Input
-                    type="number"
-                    value={hourlyRate !== null ? hourlyRate : ""}
-                    onChange={(e) => setHourlyRate(Number(e.target.value))}
-                    placeholder="Ingrese su tarifa por hora"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsProjectModalOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={createProject} disabled={isCreatingProject}>
-                    {isCreatingProject ? "Creando..." : "Crear Proyecto"}
-                  </Button>
-                </div>
-              </div>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
+        <div className="mt-4">
+          <label className="block text-sm">Descripción de la tarea (Opcional):</label>
+          <Textarea
+            placeholder="Describe tu tarea..."
+            value={taskDescription}
+            onChange={(e) => setTaskDescription(e.target.value)}
+          />
+        </div>
 
-        <AddEventModal
-          isOpen={newEvent !== null}
-          onClose={() => setNewEvent(null)}
-          newEvent={newEvent}
-          setNewEvent={setNewEvent}
-          onSave={saveNewEvent}
-          projects={projects}
+        <Button 
+          onClick={() => setIsProjectModalOpen(true)}
+          className="w-full mt-4"
+        >
+          Crear Nuevo Proyecto
+        </Button>
+      </div>
+
+      <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+          }}
+          editable={false}
+          selectable
+          select={handleSelect}
+          events={events}
+          dateClick={handleDateClick}
+          eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+          datesSet={applyEventColors}
+          eventDidMount={(info) => {
+            const project = projectsRef.current.find(p => p.name === info.event.extendedProps.project);
+            if (project) {
+              info.el.style.backgroundColor = project.color;
+              info.el.style.borderColor = project.color;
+            }
+          }}
         />
       </div>
-    </TimerProvider>
-  );
-};
 
-export default Home;
+      {selectedEvent && (
+        <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
+          <h2 className="text-lg font-bold">Detalles del Evento</h2>
+          <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
+          <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
+          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || 'Sin descripción'}</p>
+          <div className="flex justify-between mt-4">
+            <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
+            <Button 
+              onClick={() => deleteEvent(selectedEvent.id)} 
+              className="bg-red-500 text-white hover:bg-red-700"
+            >
+              Eliminar Evento
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
+            <Dialog.Title className="text-lg font-bold mb-4">
+              Crear Nuevo Proyecto
+            </Dialog.Title>
+            <div className="space-y-4">
+              <div>
+                <Label>Nombre del Proyecto</Label>
+                <Input
+                  value={newProjectName}
+                  onChange={(e) => setNewProjectName(e.target.value)}
+                  placeholder="Ingrese el nombre del proyecto"
+                />
+              </div>
+              <div>
+                <Label>Tarifa por Hora</Label>
+                <Input
+                  type="number"
+                  value={hourlyRate !== null ? hourlyRate : ""}
+                  onChange={(e) => setHourlyRate(Number(e.target.value))}
+                  placeholder="Ingrese su tarifa por hora"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsProjectModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={createProject} disabled={isCreatingProject}>
+                  {isCreatingProject ? "Creando..." : "Crear Proyecto"}
+                </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <AddEventModal
+        isOpen={newEvent !== null}
+        onClose={() => setNewEvent(null)}
+        newEvent={newEvent}
+        setNewEvent={setNewEvent}
+        onSave={saveNewEvent}
+        projects={projects}
+      />
+    </div>
+  );
+}
