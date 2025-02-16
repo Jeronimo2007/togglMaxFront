@@ -25,7 +25,7 @@ interface NewEvent {
   start: Date;
   end: Date;
   project: string;
-  descripcion: string;
+  descripcion?: string;
 }
 
 interface Event {
@@ -41,7 +41,7 @@ interface Event {
   extendedProps: {
     project: string;
     duracion: string;
-    descripcion: string;
+    descripcion?: string;
   };
 }
 
@@ -126,7 +126,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
               </Select>
             </div>
             <div>
-              <Label>Descripción</Label>
+              <Label>Descripción (Opcional)</Label>
               <Textarea
                 value={newEvent?.descripcion}
                 onChange={(e) => setNewEvent({...newEvent!, descripcion: e.target.value})}
@@ -287,7 +287,7 @@ export default function Home() {
       if (data.status === "success") {
         const formattedEvents = data.data.map((event: any) => ({
           id: event.id,
-          title: event.descripcion,
+          title: event.descripcion || 'Sin descripción',
           start: new Date(event.fecha_inicio).toISOString(),
           end: new Date(event.fecha_fin).toISOString(),
           display: "block",
@@ -371,8 +371,8 @@ export default function Home() {
   };
 
   const saveNewEvent = async (): Promise<void> => {
-    if (!newEvent?.project || !newEvent?.descripcion?.trim()) {
-      alert("Por favor, completa todos los campos");
+    if (!newEvent?.project) {
+      alert("Por favor, selecciona un proyecto");
       return;
     }
 
@@ -390,7 +390,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           project: newEvent.project,
-          descripcion: newEvent.descripcion,
+          descripcion: newEvent.descripcion || '',
           fecha_inicio: newEvent.start.toISOString(),
           fecha_fin: newEvent.end.toISOString(),
         }),
@@ -410,8 +410,8 @@ export default function Home() {
   };
 
   const saveTimerEvent = async (): Promise<void> => {
-    if (!selectedProject || !taskDescription.trim()) {
-      alert("Por favor, selecciona un proyecto y añade una descripción");
+    if (!selectedProject) {
+      alert("Por favor, selecciona un proyecto");
       return;
     }
 
@@ -424,7 +424,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           project: selectedProject,
-          descripcion: taskDescription,
+          descripcion: taskDescription || '',
           duracion: time,
         }),
       });
@@ -484,16 +484,18 @@ export default function Home() {
         </div>
 
         {selectedProject && (
-          <Button
-            onClick={() => deleteProject(selectedProject)}
-            className="w-full mt-2 bg-red-500 text-white hover:bg-red-700"
-          >
-            Eliminar Proyecto
-          </Button>
+          <div className="flex justify-start mt-2">
+            <Button
+              onClick={() => deleteProject(selectedProject)}
+              className="bg-red-500 text-white hover:bg-red-700 text-sm"
+            >
+              Eliminar Proyecto
+            </Button>
+          </div>
         )}
 
         <div className="mt-4">
-          <label className="block text-sm">Descripción de la tarea:</label>
+          <label className="block text-sm">Descripción de la tarea (Opcional):</label>
           <Textarea
             placeholder="Describe tu tarea..."
             value={taskDescription}
@@ -544,7 +546,7 @@ export default function Home() {
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
           <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
           <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
-          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion}</p>
+          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || 'Sin descripción'}</p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
             <Button 
