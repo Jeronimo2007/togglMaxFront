@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -163,13 +161,11 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [projectColor, setProjectColor] = useState<string>("#000000");
 
-  // Function to apply colors to events
+  // Function to apply colors to events (if needed dynamically)
   const applyEventColors = () => {
     if (!calendarRef.current) return;
-    
     const calendarApi = calendarRef.current.getApi();
     const currentEvents = calendarApi.getEvents();
-  
     currentEvents.forEach(event => {
       const project = projects.find(p => p.name === event.extendedProps.project);
       if (project) {
@@ -290,7 +286,7 @@ export default function Home() {
       if (data.status === "success") {
         setProjects(data.data);
         projectsRef.current = data.data;
-        applyEventColors(); // Ensure colors are applied after fetching projects
+        applyEventColors();
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -322,8 +318,6 @@ export default function Home() {
         }));
 
         setEvents(formattedEvents);
-        // Removed setTimeout(applyEventColors, 0); 
-        // Colors will be applied via the useEffect that watches "events".
       }
     } catch (error) {
       console.error("Error al obtener eventos:", error);
@@ -374,7 +368,6 @@ export default function Home() {
     const clickedDate = new Date(info.date);
     const end = new Date(clickedDate);
     end.setHours(end.getHours() + 1);
-
     setNewEvent({
       start: clickedDate,
       end: end,
@@ -397,12 +390,10 @@ export default function Home() {
       alert("Por favor, selecciona un proyecto");
       return;
     }
-
     if (newEvent.end <= newEvent.start) {
       alert("La fecha de fin debe ser posterior a la fecha de inicio");
       return;
     }
-
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/manual/`, {
         method: "POST",
@@ -417,7 +408,6 @@ export default function Home() {
           fecha_fin: newEvent.end.toISOString(),
         }),
       });
-
       if (response.ok) {
         setNewEvent(null);
         fetchEvents();
@@ -436,7 +426,6 @@ export default function Home() {
       alert("Por favor, selecciona un proyecto");
       return;
     }
-
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`, {
         method: "POST",
@@ -450,7 +439,6 @@ export default function Home() {
           duracion: time,
         }),
       });
-
       if (response.ok) {
         setTime(0);
         setIsRunning(false);
@@ -470,7 +458,6 @@ export default function Home() {
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
         <h2 className="text-lg font-bold">Temporizador</h2>
         <span className="text-2xl">{formatTime(time)}</span>
-
         <div className="space-x-2">
           <Button onClick={() => setIsRunning(!isRunning)}>
             {isRunning ? "Pause" : "Start"}
@@ -478,7 +465,6 @@ export default function Home() {
           <Button onClick={saveTimerEvent}>Stop & Save</Button>
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
-
         <div className="mt-4">
           <label className="block text-sm">Proyecto:</label>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -494,7 +480,6 @@ export default function Home() {
             </SelectContent>
           </Select>
         </div>
-
         {selectedProject && (
           <div className="flex justify-start mt-2">
             <Button
@@ -505,7 +490,6 @@ export default function Home() {
             </Button>
           </div>
         )}
-
         <div className="mt-4">
           <label className="block text-sm">Descripción de la tarea (Opcional):</label>
           <Textarea
@@ -514,7 +498,6 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
-
         <Button 
           onClick={() => setIsProjectModalOpen(true)}
           className="w-full mt-4"
@@ -522,7 +505,6 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-
       <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
         <FullCalendar
           ref={calendarRef}
@@ -541,16 +523,16 @@ export default function Home() {
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
           datesSet={applyEventColors}
           eventDidMount={(info) => {
-            // Using projectsRef to style event element when mounted
+            // Using projectsRef to style event element when mounted. 
+            // Use setProperty with 'important' to force override FullCalendar styles.
             const project = projectsRef.current.find(p => p.name === info.event.extendedProps.project);
             if (project) {
-              info.el.style.backgroundColor = project.color;
-              info.el.style.borderColor = project.color;
+              info.el.style.setProperty('background-color', project.color, 'important');
+              info.el.style.setProperty('border-color', project.color, 'important');
             }
           }}
         />
       </div>
-
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
@@ -568,7 +550,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
       <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
@@ -613,7 +594,6 @@ export default function Home() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
       <AddEventModal
         isOpen={newEvent !== null}
         onClose={() => setNewEvent(null)}
