@@ -159,6 +159,7 @@ export default function Home() {
   const [newProjectName, setNewProjectName] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -212,6 +213,10 @@ export default function Home() {
       });
 
       if (response.ok) {
+        // Limpia el proyecto seleccionado si coincide
+        if (selectedProject === projectName) {
+          setSelectedProject("");
+        }
         fetchProjects(); // Actualizar la lista de proyectos
         fetchEvents(); // Actualizar la lista de eventos
       } else {
@@ -268,10 +273,13 @@ export default function Home() {
       const data = await response.json();
       if (data.status === "success") {
         const colors = generateHarmoniousColors(data.data.length);
-        setProjects(data.data.map((project: any, index: number) => ({
+        const projectsData = data.data.map((project: any, index: number) => ({
           ...project,
           color: colors[index],
-        })));
+        }));
+        setProjects(projectsData);
+        // Update the calendar key to force re-render and refresh event styling
+        setCalendarKey(Date.now());
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -513,6 +521,7 @@ export default function Home() {
 
       <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
         <FullCalendar
+          key={calendarKey}
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
@@ -533,10 +542,10 @@ export default function Home() {
           }}
           eventDidMount={(info) => {
             const project = projects.find(p => p.name === info.event.extendedProps.project);
-            if (project) {
-              info.el.style.backgroundColor = project.color;
-              info.el.style.borderColor = project.color;
-            }
+            // Set a fallback color if project not found (e.g., after deletion)
+            const color = project ? project.color : '#999999';
+            info.el.style.backgroundColor = color;
+            info.el.style.borderColor = color;
           }}
         />
       </div>
