@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -11,10 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
-import { DateClickArg } from '@fullcalendar/interaction';
+import { DateClickArg } from "@fullcalendar/interaction";
 import type { DateSelectArg } from "@fullcalendar/core";
-import { EventClickArg } from '@fullcalendar/core';
-import { SketchPicker } from 'react-color';
+import { EventClickArg } from "@fullcalendar/core";
+import { SketchPicker } from "react-color";
 
 interface Project {
   id: string;
@@ -148,7 +146,6 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
 
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
-  const projectsRef = useRef<Project[]>([]);
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -163,19 +160,7 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [projectColor, setProjectColor] = useState<string>("#000000");
 
-  // Function to apply colors to events (if needed dynamically)
-  const applyEventColors = () => {
-    if (!calendarRef.current) return;
-    const calendarApi = calendarRef.current.getApi();
-    const currentEvents = calendarApi.getEvents();
-    currentEvents.forEach(event => {
-      const project = projects.find(p => p.name === event.extendedProps.project);
-      if (project) {
-        event.setProp('backgroundColor', project.color);
-        event.setProp('borderColor', project.color);
-      }
-    });
-  };
+  // No longer using applyEventColors as inline styling is handled in custom eventContent
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -189,11 +174,9 @@ export default function Home() {
       console.error("ID de evento no proporcionado");
       return;
     }
-
     if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) {
       return;
     }
-
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}`, {
         method: "DELETE",
@@ -201,7 +184,6 @@ export default function Home() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
       if (response.ok) {
         setSelectedEvent(null);
         fetchEvents();
@@ -219,7 +201,6 @@ export default function Home() {
     if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
       return;
     }
-
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/delete/${projectName}`, {
         method: "DELETE",
@@ -227,7 +208,6 @@ export default function Home() {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-
       if (response.ok) {
         fetchProjects();
         fetchEvents();
@@ -246,34 +226,31 @@ export default function Home() {
       alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
       return;
     }
-
     setIsCreatingProject(true);
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/add`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           project_name: newProjectName,
           bill: hourlyRate,
-          color: projectColor
-        })
+          color: projectColor,
+        }),
       });
-
       if (!response.ok) {
-        throw new Error('Error al crear el proyecto');
+        throw new Error("Error al crear el proyecto");
       }
-
       await fetchProjects();
       setNewProjectName("");
       setHourlyRate(null);
       setProjectColor("#000000");
       setIsProjectModalOpen(false);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al crear el proyecto');
+      console.error("Error:", error);
+      alert("Error al crear el proyecto");
     } finally {
       setIsCreatingProject(false);
     }
@@ -287,8 +264,6 @@ export default function Home() {
       const data = await response.json();
       if (data.status === "success") {
         setProjects(data.data);
-        projectsRef.current = data.data;
-        applyEventColors();
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -304,7 +279,7 @@ export default function Home() {
       if (data.status === "success") {
         const formattedEvents = data.data.map((event: any) => ({
           id: event.id,
-          title: event.descripcion || 'Sin descripción',
+          title: event.descripcion || "Sin descripción",
           start: new Date(event.fecha_inicio).toISOString(),
           end: new Date(event.fecha_fin).toISOString(),
           display: "block",
@@ -318,7 +293,6 @@ export default function Home() {
             descripcion: event.descripcion,
           },
         }));
-
         setEvents(formattedEvents);
       }
     } catch (error) {
@@ -328,33 +302,22 @@ export default function Home() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         fetchEvents();
       }
     };
-
     const handleFocus = () => {
       fetchEvents();
     };
-
     fetchProjects();
     fetchEvents();
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
-
-  // Re-apply event colors whenever projects or events change
-  useEffect(() => {
-    if (projects.length > 0 && events.length > 0) {
-      applyEventColors();
-    }
-  }, [projects, events]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -405,7 +368,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           project: newEvent.project,
-          descripcion: newEvent.descripcion || '',
+          descripcion: newEvent.descripcion || "",
           fecha_inicio: newEvent.start.toISOString(),
           fecha_fin: newEvent.end.toISOString(),
         }),
@@ -437,7 +400,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           project: selectedProject,
-          descripcion: taskDescription || '',
+          descripcion: taskDescription || "",
           duracion: time,
         }),
       });
@@ -500,22 +463,19 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
-        <Button 
-          onClick={() => setIsProjectModalOpen(true)}
-          className="w-full mt-4"
-        >
+        <Button onClick={() => setIsProjectModalOpen(true)} className="w-full mt-4">
           Crear Nuevo Proyecto
         </Button>
       </div>
-      <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
+      <div className="resizable-calendar-container" style={{ resize: "vertical", overflow: "hidden", minHeight: "500px" }}>
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
           editable={false}
           selectable
@@ -523,28 +483,43 @@ export default function Home() {
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-          datesSet={applyEventColors}
-          eventDidMount={(info) => {
-            // Using projectsRef to style event element when mounted. 
-            // Use setProperty with 'important' to force override FullCalendar styles.
-            const project = projectsRef.current.find(p => p.name === info.event.extendedProps.project);
-            if (project) {
-              info.el.style.setProperty('background-color', project.color, 'important');
-              info.el.style.setProperty('border-color', project.color, 'important');
-            }
+          /* Use custom eventContent to render events with Tailwind styling */
+          eventContent={(info) => {
+            // Find the project color
+            const project = projects.find(
+              (p) => p.name === info.event.extendedProps.project
+            );
+            const bgColor = project ? project.color : "#374151"; // fallback to gray-700
+            return (
+              <div
+                className="rounded-md p-1 text-white !cursor-pointer"
+                style={{ backgroundColor: bgColor, border: `1px solid ${bgColor}` }}
+              >
+                <div className="text-sm font-medium overflow-hidden whitespace-nowrap overflow-ellipsis">
+                  {info.event.title}
+                </div>
+              </div>
+            );
           }}
         />
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
-          <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
-          <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
-          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || 'Sin descripción'}</p>
+          <p>
+            <strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}
+          </p>
+          <p>
+            <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
+          </p>
+          <p>
+            <strong>Descripción:</strong>{" "}
+            {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
+          </p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
-            <Button 
-              onClick={() => deleteEvent(selectedEvent.id)} 
+            <Button
+              onClick={() => deleteEvent(selectedEvent.id)}
               className="bg-red-500 text-white hover:bg-red-700"
             >
               Eliminar Evento
