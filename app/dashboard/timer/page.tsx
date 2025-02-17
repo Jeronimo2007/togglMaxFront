@@ -15,6 +15,7 @@ import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from '@fullcalendar/core';
 
+// Interfaces
 interface Project {
   id: string;
   name: string;
@@ -54,6 +55,7 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
+// Modal de añadir evento
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
   const adjustTimeZone = (date: Date): string => {
     if (!date) return '';
@@ -157,6 +159,8 @@ export default function Home() {
   const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  // Nuevo estado para el color seleccionado del proyecto
+  const [newProjectColor, setNewProjectColor] = useState<string>("#aa69b9");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
@@ -188,7 +192,7 @@ export default function Home() {
 
       if (response.ok) {
         setSelectedEvent(null);
-        fetchEvents(); // Actualizar la lista de eventos
+        fetchEvents();
       } else {
         const errorData = await response.json();
         alert(errorData.detail || "Error al eliminar el evento");
@@ -213,12 +217,11 @@ export default function Home() {
       });
 
       if (response.ok) {
-        // Limpia el proyecto seleccionado si coincide
         if (selectedProject === projectName) {
           setSelectedProject("");
         }
-        fetchProjects(); // Actualizar la lista de proyectos
-        fetchEvents(); // Actualizar la lista de eventos
+        fetchProjects();
+        fetchEvents();
       } else {
         const errorData = await response.json();
         alert(errorData.detail || "Error al eliminar el proyecto");
@@ -243,9 +246,11 @@ export default function Home() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        // Se envía el color seleccionado junto con los demás datos
         body: JSON.stringify({
           project_name: newProjectName,
-          bill: hourlyRate
+          bill: hourlyRate,
+          color: newProjectColor
         })
       });
 
@@ -256,6 +261,7 @@ export default function Home() {
       await fetchProjects();
       setNewProjectName("");
       setHourlyRate(null);
+      setNewProjectColor("#aa69b9");
       setIsProjectModalOpen(false);
     } catch (error) {
       console.error('Error:', error);
@@ -272,13 +278,12 @@ export default function Home() {
       });
       const data = await response.json();
       if (data.status === "success") {
-        const colors = generateHarmoniousColors(data.data.length);
-        const projectsData = data.data.map((project: any, index: number) => ({
+        // Si el backend ya guarda el color, no es necesario generar colores
+        const projectsData = data.data.map((project: any) => ({
           ...project,
-          color: colors[index],
+          color: project.color || "#999999"
         }));
         setProjects(projectsData);
-        // Update the calendar key to force re-render and refresh event styling
         setCalendarKey(Date.now());
       }
     } catch (error) {
@@ -309,7 +314,6 @@ export default function Home() {
             descripcion: event.descripcion,
           },
         }));
-
         setEvents(formattedEvents);
         if (calendarRef.current) {
           calendarRef.current.getApi().refetchEvents();
@@ -331,15 +335,12 @@ export default function Home() {
       fetchEvents();
     };
 
-    // Cargar datos iniciales
     fetchProjects();
     fetchEvents();
 
-    // Agregar event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
 
-    // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
@@ -451,6 +452,7 @@ export default function Home() {
     }
   };
 
+  // Función auxiliar (se puede remover si ya no se necesita la generación automática)
   const generateHarmoniousColors = (numColors: number): string[] => {
     const colors = [];
     const hueStep = 360 / numColors;
@@ -542,7 +544,6 @@ export default function Home() {
           }}
           eventDidMount={(info) => {
             const project = projects.find(p => p.name === info.event.extendedProps.project);
-            // Set a fallback color if project not found (e.g., after deletion)
             const color = project ? project.color : '#999999';
             info.el.style.backgroundColor = color;
             info.el.style.borderColor = color;
@@ -591,6 +592,14 @@ export default function Home() {
                   value={hourlyRate !== null ? hourlyRate : ""}
                   onChange={(e) => setHourlyRate(Number(e.target.value))}
                   placeholder="Ingrese su tarifa por hora"
+                />
+              </div>
+              <div>
+                <Label>Color del Proyecto</Label>
+                <Input
+                  type="color"
+                  value={newProjectColor}
+                  onChange={(e) => setNewProjectColor(e.target.value)}
                 />
               </div>
               <div className="flex justify-end space-x-2">
