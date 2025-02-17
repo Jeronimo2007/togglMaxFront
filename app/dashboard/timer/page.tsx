@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -11,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
-import { DateClickArg } from "@fullcalendar/interaction";
+import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
-import { EventClickArg } from "@fullcalendar/core";
-import { SketchPicker } from "react-color";
+import { EventClickArg } from '@fullcalendar/core';
+// Removed import of SketchPicker since color selection is now automatic
+
+// ---- Interfaces ----
 
 interface Project {
   id: string;
@@ -55,6 +55,8 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
+// ---- Helper Component: AddEventModal ----
+
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
   const adjustTimeZone = (date: Date): string => {
     if (!date) return '';
@@ -67,9 +69,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
         <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md max-h-[85vh] overflow-y-auto z-[49]">
-          <Dialog.Title className="text-lg font-bold mb-4">
-            Agregar Nuevo Evento
-          </Dialog.Title>
+          <Dialog.Title className="text-lg font-bold mb-4">Agregar Nuevo Evento</Dialog.Title>
           <div className="space-y-4">
             <div>
               <Label>Fecha y Hora Inicio</Label>
@@ -146,6 +146,16 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
   );
 };
 
+// ---- Helper Function: generateProjectColor ----
+// Automatically assign a pinkish color using HSL variation.
+// We use a fixed hue and saturation, and vary the lightness based on the project index.
+function generateProjectColor(index: number): string {
+  const lightness = 70 - (index % 5) * 5; // cycles: 70%, 65%, 60%, 55%, 50%
+  return `hsl(320, 80%, ${lightness}%)`;
+}
+
+// ---- Main Component: Home ----
+
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
   const [time, setTime] = useState<number>(0);
@@ -160,32 +170,48 @@ export default function Home() {
   const [newProjectName, setNewProjectName] = useState("");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [projectColor, setProjectColor] = useState<string>("#000000");
 
-  // No longer using applyEventColors as inline styling is handled in custom eventContent
+  // Function to apply colors automatically to events based on the associated project's color.
+  const applyEventColors = () => {
+    if (!calendarRef.current) return;
+    const calendarApi = calendarRef.current.getApi();
+    const currentEvents = calendarApi.getEvents();
+    currentEvents.forEach(event => {
+      const project = projects.find(p => p.name === event.extendedProps.project);
+      if (project) {
+        event.setProp("backgroundColor", project.color);
+        event.setProp("borderColor", project.color);
+      }
+    });
+  };
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // CRUD functions
 
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
       console.error("ID de evento no proporcionado");
       return;
     }
-    if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) {
-      return;
-    }
+    if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       if (response.ok) {
         setSelectedEvent(null);
         fetchEvents();
@@ -200,16 +226,17 @@ export default function Home() {
   };
 
   const deleteProject = async (projectName: string): Promise<void> => {
-    if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
-      return;
-    }
+    if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/delete/${projectName}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/delete/${projectName}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       if (response.ok) {
         fetchProjects();
         fetchEvents();
@@ -223,6 +250,7 @@ export default function Home() {
     }
   };
 
+  // Create project automatically assigns a color.
   const createProject = async () => {
     if (!newProjectName.trim() || hourlyRate === null) {
       alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
@@ -230,6 +258,8 @@ export default function Home() {
     }
     setIsCreatingProject(true);
     try {
+      // Generate a color based on the current number of projects.
+      const autoColor = generateProjectColor(projects.length);
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/add`, {
         method: "POST",
         headers: {
@@ -239,7 +269,7 @@ export default function Home() {
         body: JSON.stringify({
           project_name: newProjectName,
           bill: hourlyRate,
-          color: projectColor,
+          color: autoColor
         }),
       });
       if (!response.ok) {
@@ -248,7 +278,6 @@ export default function Home() {
       await fetchProjects();
       setNewProjectName("");
       setHourlyRate(null);
-      setProjectColor("#000000");
       setIsProjectModalOpen(false);
     } catch (error) {
       console.error("Error:", error);
@@ -266,6 +295,7 @@ export default function Home() {
       const data = await response.json();
       if (data.status === "success") {
         setProjects(data.data);
+        applyEventColors(); // Update event colors if projects change
       }
     } catch (error) {
       console.error("Error al obtener proyectos:", error);
@@ -485,18 +515,21 @@ export default function Home() {
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
-          /* Use custom eventContent to render events with Tailwind styling */
+          datesSet={applyEventColors}
+          eventDidMount={(info) => {
+            // We also style the mounted event using inline Tailwind classes logic.
+            const project = projects.find(p => p.name === info.event.extendedProps.project);
+            if (project) {
+              info.el.style.setProperty("background-color", project.color, "important");
+              info.el.style.setProperty("border-color", project.color, "important");
+            }
+          }}
+          // Optionally, use eventContent to render custom Tailwind-based event markup.
           eventContent={(info) => {
-            // Find the project color
-            const project = projects.find(
-              (p) => p.name === info.event.extendedProps.project
-            );
-            const bgColor = project ? project.color : "#374151"; // fallback to gray-700
+            const project = projects.find(p => p.name === info.event.extendedProps.project);
+            const bgColor = project ? project.color : "#374151"; // fallback
             return (
-              <div
-                className="rounded-md p-1 text-white !cursor-pointer"
-                style={{ backgroundColor: bgColor, border: `1px solid ${bgColor}` }}
-              >
+              <div className="rounded-md p-1 text-white cursor-pointer" style={{ backgroundColor: bgColor, border: `1px solid ${bgColor}` }}>
                 <div className="text-sm font-medium overflow-hidden whitespace-nowrap overflow-ellipsis">
                   {info.event.title}
                 </div>
@@ -508,22 +541,12 @@ export default function Home() {
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
-          <p>
-            <strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}
-          </p>
-          <p>
-            <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
-          </p>
-          <p>
-            <strong>Descripción:</strong>{" "}
-            {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
-          </p>
+          <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
+          <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
+          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || "Sin descripción"}</p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
-            <Button
-              onClick={() => deleteEvent(selectedEvent.id)}
-              className="bg-red-500 text-white hover:bg-red-700"
-            >
+            <Button onClick={() => deleteEvent(selectedEvent.id)} className="bg-red-500 text-white hover:bg-red-700">
               Eliminar Evento
             </Button>
           </div>
@@ -533,9 +556,7 @@ export default function Home() {
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
           <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
-            <Dialog.Title className="text-lg font-bold mb-4">
-              Crear Nuevo Proyecto
-            </Dialog.Title>
+            <Dialog.Title className="text-lg font-bold mb-4">Crear Nuevo Proyecto</Dialog.Title>
             <div className="space-y-4">
               <div>
                 <Label>Nombre del Proyecto</Label>
@@ -554,13 +575,7 @@ export default function Home() {
                   placeholder="Ingrese su tarifa por hora"
                 />
               </div>
-              <div>
-                <Label>Color del Proyecto</Label>
-                <SketchPicker
-                  color={projectColor}
-                  onChangeComplete={(color) => setProjectColor(color.hex)}
-                />
-              </div>
+              {/* Removed the Color selection UI as project colors are generated automatically */}
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsProjectModalOpen(false)}>
                   Cancelar
