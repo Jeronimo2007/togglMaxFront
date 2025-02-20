@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format, isValid, parseISO, startOfWeek, endOfWeek } from "date-fns";
+import { format, isValid, parseISO, startOfWeek, endOfWeek, addDays, differenceInCalendarDays } from "date-fns";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ReportData {
@@ -143,13 +143,30 @@ export default function ReportPage() {
 
   useEffect(() => {
     fetchReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const chartData = reportData.map(item => ({
-    date: item.fecha_inicio.split('T')[0],
-    seconds: item.duracion,
-    project: item.project
-  }));
+  // Helper function para generar un array de fechas entre startDate y endDate
+  const getDatesInRange = (start: string, end: string) => {
+    const startDt = parseISO(start);
+    const endDt = parseISO(end);
+    const diff = differenceInCalendarDays(endDt, startDt);
+    const dates = [];
+    for (let i = 0; i <= diff; i++) {
+      const current = addDays(startDt, i);
+      dates.push(format(current, "yyyy-MM-dd"));
+    }
+    return dates;
+  };
+
+  // Construir los datos del chart agrupando por fecha entre las fechas seleccionadas
+  const chartData = getDatesInRange(startDate, endDate).map(date => {
+    // Sumar las duraciones de todos los reportes que coinciden con la fecha
+    const seconds = reportData
+      .filter(item => item.fecha_inicio.split("T")[0] === date)
+      .reduce((acc, item) => acc + item.duracion, 0);
+    return { date, seconds };
+  });
 
   return (
     <div className="p-6 space-y-6">
@@ -207,17 +224,17 @@ export default function ReportPage() {
 
       {/* Chart Section */}
       <div className="h-[400px] bg-black p-4 rounded-lg shadow border border-gray-200 text-white">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData}>
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip 
-            formatter={(value: number) => formatDuration(value)}
-            labelFormatter={(label) => `Fecha: ${label}`}
-          />
-          <Bar dataKey="seconds" fill="#8884d8" name="Tiempo" />
-        </BarChart>
-      </ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData}>
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip 
+              formatter={(value: number) => formatDuration(value)}
+              labelFormatter={(label) => `Fecha: ${label}`}
+            />
+            <Bar dataKey="seconds" fill="#8884d8" name="Tiempo" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Detailed List Section */}

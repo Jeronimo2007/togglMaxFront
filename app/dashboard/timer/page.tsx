@@ -300,7 +300,8 @@ export default function Home() {
       if (data.status === "success") {
         const formattedEvents = data.data.map((event: any) => ({
           id: event.id,
-          title: event.descripcion || 'Sin descripción',
+          // Updated: now showing the project name as the event title
+          title: event.project,
           start: new Date(event.fecha_inicio).toISOString(),
           end: new Date(event.fecha_fin).toISOString(),
           display: "block",
@@ -311,6 +312,7 @@ export default function Home() {
           extendedProps: {
             project: event.project,
             duracion: formatTime(event.duracion),
+            // Keep the description in extendedProps if needed for modal details
             descripcion: event.descripcion,
           },
         }));
