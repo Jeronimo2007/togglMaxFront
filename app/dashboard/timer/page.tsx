@@ -159,7 +159,11 @@ export default function Home() {
   const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
-  // Nuevo estado para el color seleccionado del proyecto
+  // Estado para actualizar proyecto
+  const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
+  const [updateProjectColor, setUpdateProjectColor] = useState<string>("#aa69b9");
+  const [updateProjectRate, setUpdateProjectRate] = useState<number | null>(null);
+  // Nuevo estado para el color seleccionado del proyecto al crear
   const [newProjectColor, setNewProjectColor] = useState<string>("#aa69b9");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
@@ -228,6 +232,41 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error al eliminar el proyecto:", error);
+      alert("Error de conexión al servidor");
+    }
+  };
+
+  // Función para actualizar proyecto
+  const updateProject = async (): Promise<void> => {
+    if (!selectedProject) return;
+    if (updateProjectRate === null) {
+      alert("Por favor ingrese una tarifa válida");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/update/${selectedProject}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            bill: updateProjectRate,
+            color: updateProjectColor,
+          }),
+        }
+      );
+      if (response.ok) {
+        await fetchProjects();
+        setIsUpdateProjectModalOpen(false);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al actualizar el proyecto");
+      }
+    } catch (error) {
+      console.error("Error al actualizar el proyecto:", error);
       alert("Error de conexión al servidor");
     }
   };
@@ -496,12 +535,23 @@ export default function Home() {
         </div>
 
         {selectedProject && (
-          <div className="flex justify-start mt-2">
+          <div className="flex justify-start mt-2 space-x-2">
             <Button
               onClick={() => deleteProject(selectedProject)}
               className="bg-red-500 text-white hover:bg-red-700 text-sm"
             >
               Eliminar Proyecto
+            </Button>
+            <Button
+              onClick={() => {
+                const proj = projects.find(p => p.name === selectedProject);
+                setUpdateProjectColor(proj?.color || "#aa69b9");
+                setUpdateProjectRate(0);
+                setIsUpdateProjectModalOpen(true);
+              }}
+              className="bg-blue-500 text-white hover:bg-blue-700 text-sm"
+            >
+              Actualizar
             </Button>
           </div>
         )}
@@ -611,6 +661,42 @@ export default function Home() {
                 <Button onClick={createProject} disabled={isCreatingProject}>
                   {isCreatingProject ? "Creando..." : "Crear Proyecto"}
                 </Button>
+              </div>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+
+      <Dialog.Root open={isUpdateProjectModalOpen} onOpenChange={setIsUpdateProjectModalOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
+            <Dialog.Title className="text-lg font-bold mb-4">
+              Actualizar Proyecto
+            </Dialog.Title>
+            <div className="space-y-4">
+              <div>
+                <Label>Nuevo Color</Label>
+                <Input
+                  type="color"
+                  value={updateProjectColor}
+                  onChange={(e) => setUpdateProjectColor(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Nueva Tarifa por Hora</Label>
+                <Input
+                  type="number"
+                  value={updateProjectRate !== null ? updateProjectRate : ""}
+                  onChange={(e) => setUpdateProjectRate(Number(e.target.value))}
+                  placeholder="Ingrese tarifa por hora"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Dialog.Close asChild>
+                  <Button variant="outline">Cancelar</Button>
+                </Dialog.Close>
+                <Button onClick={updateProject}>Actualizar</Button>
               </div>
             </div>
           </Dialog.Content>
