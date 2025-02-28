@@ -2,18 +2,18 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
+import type { EventApi } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
-import { DateClickArg } from '@fullcalendar/interaction';
 import type { DateSelectArg } from "@fullcalendar/core";
-import { EventClickArg } from '@fullcalendar/core';
+import { EventClickArg } from "@fullcalendar/core";
 
 // Interfaces
 interface Project {
@@ -55,7 +55,7 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
-// Modal de añadir evento
+// Modal para agregar evento
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
   const adjustTimeZone = (date: Date): string => {
     if (!date) return '';
@@ -285,7 +285,6 @@ export default function Home() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        // Se envía el color seleccionado junto con los demás datos
         body: JSON.stringify({
           project_name: newProjectName,
           bill: hourlyRate,
@@ -317,7 +316,6 @@ export default function Home() {
       });
       const data = await response.json();
       if (data.status === "success") {
-        // Si el backend ya guarda el color, no es necesario generar colores
         const projectsData = data.data.map((project: any) => ({
           ...project,
           color: project.color || "#999999"
@@ -339,7 +337,6 @@ export default function Home() {
       if (data.status === "success") {
         const formattedEvents = data.data.map((event: any) => ({
           id: event.id,
-          // Updated: now showing the project name as the event title
           title: event.project,
           start: new Date(event.fecha_inicio).toISOString(),
           end: new Date(event.fecha_fin).toISOString(),
@@ -351,7 +348,6 @@ export default function Home() {
           extendedProps: {
             project: event.project,
             duracion: formatTime(event.duracion),
-            // Keep the description in extendedProps if needed for modal details
             descripcion: event.descripcion,
           },
         }));
@@ -493,7 +489,47 @@ export default function Home() {
     }
   };
 
-  // Función auxiliar (se puede remover si ya no se necesita la generación automática)
+  // Función para actualizar las fechas del evento en el backend
+  const updateEventDates = async (info: any) => {
+    try {
+      const eventId = info.event.id;
+      const newStart: Date = info.event.start;
+      const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}/dates`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          fecha_inicio: newStart.toISOString(),
+          fecha_fin: newEnd.toISOString(),
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al actualizar las fechas del evento");
+        info.revert();
+      }
+    } catch (error) {
+      console.error("Error al actualizar fechas del evento:", error);
+      alert("Error de conexión al servidor al actualizar fechas");
+      info.revert();
+    }
+  };
+
+  // Handler para cuando se mueve (drag & drop) un evento
+  const handleEventDrop = async (info: any) => {
+    await updateEventDates(info);
+  };
+
+  // Handler para cuando se redimensiona un evento (cambio de duración)
+  const handleEventResize = async (info: any) => {
+    await updateEventDates(info);
+  };
+
+  // Función auxiliar para generar colores armónicos (si se requiere)
   const generateHarmoniousColors = (numColors: number): string[] => {
     const colors = [];
     const hueStep = 360 / numColors;
@@ -584,12 +620,14 @@ export default function Home() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
           }}
-          editable={false}
+          editable={true}
           selectable
           select={handleSelect}
           events={events}
           dateClick={handleDateClick}
           eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+          eventDrop={handleEventDrop}
+          eventResize={handleEventResize}
           eventClassNames={({ event }) => {
             const project = projects.find(p => p.name === event.extendedProps.project);
             return project ? `border-accent text-primary-foreground` : '';
