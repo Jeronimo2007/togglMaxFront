@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type { EventApi } from "@fullcalendar/core";
