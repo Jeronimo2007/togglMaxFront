@@ -236,6 +236,9 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, 
 
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
+  // Nuevo ref para el contenedor del calendario
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -256,13 +259,12 @@ export default function Home() {
 
   // Estado para el marcador de "now"
   const [now, setNow] = useState<Date>(new Date());
-  // Estado para el now marker (línea y botón)
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
-  // Estados para calcular el left offset y width de la columna del día actual
   const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
   const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
-  const calendarContainerHeight = 500; // px
+  // Altura del contenedor del calendario
+  const calendarContainerHeight = 500;
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -273,7 +275,7 @@ export default function Home() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Actualizar el estado de "now" cada minuto en vez de cada segundo
+  // Actualiza "now" cada minuto
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -281,32 +283,32 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Calcular el top offset basado en la hora actual
+  // Calculo del top offset basado en la hora actual
   const minutesSinceMidnight =
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
-  // Función que recalcule el left offset y el ancho de la columna del día actual
+  // Función para recalcular nowLeftOffset y dayColumnWidth
   const recalcNowMarker = useCallback(() => {
-    if (calendarRef.current) {
+    if (calendarRef.current && containerRef.current) {
+      // Medir el contenedor a través del ref del div
+      const containerWidth = containerRef.current.getBoundingClientRect().width;
+      // Fallback: si no se consigue un ancho, utilizar window.innerWidth
+      const effectiveWidth = containerWidth || window.innerWidth;
+      
       const calendarApi = calendarRef.current.getApi();
       const view = calendarApi.view;
       const viewStart = view.activeStart;
       const diffTime = now.getTime() - viewStart.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-      // Debug logs para verificar valores
       console.log("now:", now);
       console.log("viewStart:", viewStart);
       console.log("diffDays:", diffDays);
+      console.log("containerWidth:", effectiveWidth, "widthPerDay:", effectiveWidth / 7);
 
       if (diffDays >= 0 && diffDays < 7) {
-        const calendarEl = (calendarRef.current as any).el as HTMLElement;
-        const containerWidth = calendarEl
-          ? calendarEl.getBoundingClientRect().width
-          : 0;
-        const widthPerDay = containerWidth / 7;
-        console.log("containerWidth:", containerWidth, "widthPerDay:", widthPerDay);
+        const widthPerDay = effectiveWidth / 7;
         setNowLeftOffset(diffDays * widthPerDay);
         setDayColumnWidth(widthPerDay);
       } else {
@@ -316,7 +318,7 @@ export default function Home() {
     }
   }, [now]);
 
-  // Recalcular siempre que cambie now, calendarKey o al redimensionar la ventana
+  // Recalcular con cambios en now, calendarKey o redimensionamiento
   useEffect(() => {
     recalcNowMarker();
   }, [now, calendarKey, recalcNowMarker]);
@@ -327,7 +329,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, [recalcNowMarker]);
 
-  // Funciones para borrar, actualizar, crear proyectos y eventos...
+  // Funciones para eliminar, actualizar, crear proyectos y eventos...
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
       console.error("ID de evento no proporcionado");
@@ -342,8 +344,8 @@ export default function Home() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
         }
       );
       if (response.ok) {
@@ -360,11 +362,7 @@ export default function Home() {
   };
 
   const deleteProject = async (projectName: string): Promise<void> => {
-    if (
-      !confirm(
-        `¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`
-      )
-    ) {
+    if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
       return;
     }
     try {
@@ -373,8 +371,8 @@ export default function Home() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
         }
       );
       if (response.ok) {
@@ -406,12 +404,12 @@ export default function Home() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           },
           body: JSON.stringify({
             bill: updateProjectRate,
             color: updateProjectColor
-          }),
+          })
         }
       );
       if (response.ok) {
@@ -446,7 +444,7 @@ export default function Home() {
             project_name: newProjectName,
             bill: hourlyRate,
             color: newProjectColor
-          }),
+          })
         }
       );
       if (!response.ok) {
@@ -600,7 +598,7 @@ export default function Home() {
             descripcion: newEvent.descripcion || "",
             fecha_inicio: newEvent.start.toISOString(),
             fecha_fin: newEvent.end.toISOString()
-          }),
+          })
         }
       );
       if (response.ok) {
@@ -634,7 +632,7 @@ export default function Home() {
             project: selectedProject,
             descripcion: taskDescription || "",
             duracion: time
-          }),
+          })
         }
       );
       if (response.ok) {
@@ -668,7 +666,7 @@ export default function Home() {
           body: JSON.stringify({
             fecha_inicio: newStart.toISOString(),
             fecha_fin: newEnd.toISOString()
-          }),
+          })
         }
       );
       if (!response.ok) {
@@ -764,8 +762,10 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
+      {/* Usamos containerRef para asegurar ancho visible */}
       <div
-        className="resizable-calendar-container relative"
+        ref={containerRef}
+        className="resizable-calendar-container relative w-full"
         style={{
           resize: "vertical",
           overflow: "hidden",
