@@ -259,7 +259,6 @@ export default function Home() {
 
   const scrollableCalendarContainer = useRef<HTMLDivElement | null>(null);
 
-
   // Estado para el marcador de "now"
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
@@ -273,7 +272,20 @@ export default function Home() {
   // Usamos un estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
 
-  // Actualiza la altura del contenedor cuando éste cambie (o al montar)
+  // Use ResizeObserver on container ref to update calendarContainerHeight when resized
+  useEffect(() => {
+    if (containerRef.current) {
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          setCalendarContainerHeight(entry.contentRect.height);
+        }
+      });
+      resizeObserver.observe(containerRef.current);
+      return () => resizeObserver.disconnect();
+    }
+  }, []);
+
+  // Actualiza la altura del contenedor al montar o cuando calendarKey cambia (como fallback)
   useEffect(() => {
     const updateContainerHeight = () => {
       if (containerRef.current) {
@@ -285,7 +297,6 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
 
-
   useEffect(() => {
     if (calendarRef.current) {
       // Buscamos el contenedor del scroll dentro del calendario
@@ -295,8 +306,6 @@ export default function Home() {
       }
     }
   }, []);
-
-
 
   // Actualiza scrollTop y scrollLeft cuando se hace scroll en el contenedor del calendario
   useEffect(() => {
@@ -320,11 +329,11 @@ export default function Home() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Actualiza "now" cada minuto
+  // Actualiza "now" cada segundo (anteriormente era cada minuto)
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
-    }, 60000);
+    }, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -879,9 +888,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-
-
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
