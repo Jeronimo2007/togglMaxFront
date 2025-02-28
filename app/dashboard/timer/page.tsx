@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type { EventApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
@@ -25,7 +23,9 @@ function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
 // Interfaces
@@ -75,10 +75,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   newEvent,
   setNewEvent,
   onSave,
-  projects
+  projects,
 }) => {
   const adjustTimeZone = (date: Date): string => {
-    if (!date) return "";
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - userTimezoneOffset)
       .toISOString()
@@ -107,7 +106,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     setNewEvent({
                       ...newEvent!,
                       start: date,
-                      end: newEvent?.end || new Date(date.getTime() + 3600000)
+                      end: newEvent?.end || new Date(date.getTime() + 3600000),
                     });
                   }
                 }}
@@ -125,7 +124,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                   if (!isNaN(date.getTime())) {
                     setNewEvent({
                       ...newEvent!,
-                      end: date
+                      end: date,
                     });
                   }
                 }}
@@ -181,7 +180,12 @@ interface NowTimerModalProps {
   projects: Project[];
 }
 
-const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, projects }) => {
+const NowTimerModal: React.FC<NowTimerModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  projects,
+}) => {
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [description, setDescription] = useState<string>("");
 
@@ -242,7 +246,7 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, 
 };
 
 export default function Home() {
-  // Eliminamos containerRef y la lógica de ResizeObserver.
+  // No usamos ResizeObserver; se fija la altura.
   const calendarRef = useRef<FullCalendar>(null);
 
   const [time, setTime] = useState<number>(0);
@@ -263,14 +267,13 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
-  // Estado para el marcador de "Now" que muestra la hora actual
+  // Estado para el marcador "Now" que se actualiza cada segundo
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
 
-  // Fijamos la altura del contenedor del calendario a un valor fijo
-  const calendarContainerHeight = 500;
+  // Altura fija de 1000px y sin scroll (overflow hidden)
+  const calendarContainerHeight = 1000;
 
-  // Actualiza "now" cada segundo para que el marcador se posicione con la hora actual
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -278,7 +281,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Función para eliminar evento
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
       console.error("ID de evento no proporcionado");
@@ -293,8 +295,8 @@ export default function Home() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       if (response.ok) {
@@ -310,9 +312,10 @@ export default function Home() {
     }
   };
 
-  // Función para eliminar proyecto
   const deleteProject = async (projectName: string): Promise<void> => {
-    if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
+    if (!confirm(
+      `¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`
+    )) {
       return;
     }
     try {
@@ -321,8 +324,8 @@ export default function Home() {
         {
           method: "DELETE",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       if (response.ok) {
@@ -341,7 +344,6 @@ export default function Home() {
     }
   };
 
-  // Función para actualizar proyecto
   const updateProject = async (): Promise<void> => {
     if (!selectedProject) return;
     if (updateProjectRate === null) {
@@ -355,12 +357,12 @@ export default function Home() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             bill: updateProjectRate,
-            color: updateProjectColor
-          })
+            color: updateProjectColor,
+          }),
         }
       );
       if (response.ok) {
@@ -376,7 +378,6 @@ export default function Home() {
     }
   };
 
-  // Función para crear proyecto
   const createProject = async () => {
     if (!newProjectName.trim() || hourlyRate === null) {
       alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
@@ -390,13 +391,13 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             project_name: newProjectName,
             bill: hourlyRate,
-            color: newProjectColor
-          })
+            color: newProjectColor,
+          }),
         }
       );
       if (!response.ok) {
@@ -415,22 +416,21 @@ export default function Home() {
     }
   };
 
-  // Función para obtener proyectos
   const fetchProjects = async (): Promise<void> => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/get`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       const data = await response.json();
       if (data.status === "success") {
         const projectsData = data.data.map((project: any) => ({
           ...project,
-          color: project.color || "#999999"
+          color: project.color || "#999999",
         }));
         setProjects(projectsData);
         setCalendarKey(Date.now());
@@ -440,15 +440,14 @@ export default function Home() {
     }
   };
 
-  // Función para obtener eventos
   const fetchEvents = async (): Promise<void> => {
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
       const data = await response.json();
@@ -466,8 +465,8 @@ export default function Home() {
           extendedProps: {
             project: event.project,
             duracion: formatTime(event.duracion),
-            descripcion: event.descripcion
-          }
+            descripcion: event.descripcion,
+          },
         }));
         setEvents(formattedEvents);
         if (calendarRef.current) {
@@ -479,7 +478,6 @@ export default function Home() {
     }
   };
 
-  // Configura eventos de actualización cuando la pestaña vuelva a estar visible o la ventana gane foco
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -499,7 +497,6 @@ export default function Home() {
     };
   }, []);
 
-  // Actualiza el temporizador si está corriendo
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning) {
@@ -518,7 +515,7 @@ export default function Home() {
       start: clickedDate,
       end: end,
       project: "",
-      descripcion: ""
+      descripcion: "",
     });
   };
 
@@ -527,7 +524,7 @@ export default function Home() {
       start: info.start,
       end: info.end,
       project: "",
-      descripcion: ""
+      descripcion: "",
     });
   };
 
@@ -547,14 +544,14 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             project: newEvent.project,
             descripcion: newEvent.descripcion || "",
             fecha_inicio: newEvent.start.toISOString(),
-            fecha_fin: newEvent.end.toISOString()
-          })
+            fecha_fin: newEvent.end.toISOString(),
+          }),
         }
       );
       if (response.ok) {
@@ -582,13 +579,13 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             project: selectedProject,
             descripcion: taskDescription || "",
-            duracion: time
-          })
+            duracion: time,
+          }),
         }
       );
       if (response.ok) {
@@ -616,12 +613,12 @@ export default function Home() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             fecha_inicio: newStart.toISOString(),
-            fecha_fin: newEnd.toISOString()
-          })
+            fecha_fin: newEnd.toISOString(),
+          }),
         }
       );
       if (!response.ok) {
@@ -644,7 +641,6 @@ export default function Home() {
     await updateEventDates(info);
   };
 
-  // Muestra el modal para iniciar el timer desde el botón "Now"
   const handleNowMarkerClick = () => {
     setIsNowModalOpen(true);
   };
@@ -656,7 +652,7 @@ export default function Home() {
     setIsNowModalOpen(false);
   };
 
-  // Calcula los minutos transcurridos desde la medianoche (incluyendo fracción de minuto)
+  // Calcula la posición vertical en base a los minutos transcurridos desde medianoche
   const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
@@ -664,12 +660,14 @@ export default function Home() {
     <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
         <h2 className="text-lg font-bold">Temporizador</h2>
-        <span className="text-2xl">{(() => {
-          const hours = Math.floor(time / 3600).toString().padStart(2, "0");
-          const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
-          const secs = (time % 60).toString().padStart(2, "0");
-          return `${hours}:${minutes}:${secs}`;
-        })()}</span>
+        <span className="text-2xl">
+          {(() => {
+            const hours = Math.floor(time / 3600).toString().padStart(2, "0");
+            const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
+            const secs = (time % 60).toString().padStart(2, "0");
+            return `${hours}:${minutes}:${secs}`;
+          })()}
+        </span>
         <div className="space-x-2">
           <Button onClick={() => setIsRunning((prev) => !prev)}>
             {isRunning ? "Pause" : "Start"}
@@ -727,11 +725,11 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Calendario con altura fija */}
+      {/* Contenedor del calendario: altura fija de 1000px y sin scroll */}
       <div
         className="relative w-full"
         style={{
-          overflow: "auto",
+          overflow: "hidden",
           height: `${calendarContainerHeight}px`
         }}
       >
@@ -743,7 +741,7 @@ export default function Home() {
           headerToolbar={{
             left: "prev,next today",
             center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay"
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
           height={calendarContainerHeight}
           editable={true}
@@ -765,7 +763,7 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Botón "Now": se posiciona dinámicamente según la hora actual */}
+        {/* Botón Now: posicionado como overlay sin depender de scroll, con diseño personalizado basado en la imagen dada */}
         <div
           style={{
             position: "absolute",
@@ -773,20 +771,24 @@ export default function Home() {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 1200,
-            pointerEvents: "auto"
+            pointerEvents: "auto",
           }}
         >
           <Button
             onClick={handleNowMarkerClick}
             title="Iniciar timer ahora"
-            className="rounded-full bg-blue-500 text-white shadow-xl p-3"
             style={{
-              width: "50px",
-              height: "50px"
+              width: "75px",
+              height: "75px",
+              borderRadius: "50%",
+              border: "none",
+              backgroundImage:
+                "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAs8AAAEgCAYAAABLiJ59AAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAtdEVYdENyZWF0aW9uIFRpbWUARnJpIDI4IEZlYiAyMDI1IDA2OjQ1OjA4IFBNIC0wNSKgn0IAAAkSSURBVHic7d0xaFQLFsfhM+sKMqCYQlCGECymMbU2acQuhZBKI9qlUGxsTKPNFmKTSgS7gJ0hVTBCejuDhYXpBJFwMY0gprEJecXb9alx9v0fJJOb+H1d7mTgNIf5zZ07czvdbne7Buj1etU0zaCHgX1kP6Gd7Ca0127s5792aRYAADj0xDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAIQ6/X5/e7+HAACAg6DT7XYHxnOv16umaYY5DxCyn9BOdhPaazf202UbAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQ6vT7/e39HgIAAA6CTrfbHRjPvV6vmqYZ5jxAyH5CO9lNaK/d2E+XbQAAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEDo3/s9AJAZHR2tiYmJGhsbq6qqzc3NWl5ervX19X2eDAB+H+IZWm58fLzu3btXU1NTOx6bm5urpaWlevjwYa2tre3DdADwe3HZBrTY9PR0ra6u/jKc/2dqaqpWV1drenp6iJMBwO9JPENLTU5O1vz8fPz/8/PzNTk5uYcTAQDiGVpqbm5uKM8Bdtf29vZ+jwDsoSNHjx79z6AHT5w4UZubm0McB6iqunXrVl29evWHYxsbG/XgwYM6f/58HTt27JfPGxkZqU+fPtXr16+HMSbwk06nU8ePH/faCS21G23rzDO00OXLl3cc+/DhQz1+/LjGx8fr0aNH9fXr1/i5wHBsb2878wyHXKfb7Q7c8l6vV03TDHMeoKqapqmTJ0/+cOzVq1d16dKlb3/3er26f/9+3bhxo44cOfLt+NbWVr17925oswJ/WVxcrKdPn9bGxsZ+jwL8wm60rTPP0EI/h3PVnx8Hf69pmrp9+3Y9e/bsh+PfhzQwXFeuXKkq1z3DYSaeoYU+f/6849jPL8a9Xq+ePHlS165d++H41tbWns4GDLa4uCic4ZBzkxRooTdv3tTFixd/+djIyEjNzs7WzZs3f/nFwZcvX/rJOhii7z8V6nQ6dfr06ar68w3vz58YAQefM8/QQsvLyzuOnTp1qmZnZ2ttba3u3Lkz8Bc3nj9/vtfjAf/1/+JYOMPh5AuD0FJv376ts2fP/qPnvH//vs6dO7dHEwF/p9Pp1JkzZ+rjx4/iGVrIFwbhEJudnf3Hz7l79+4eTAL8nU6ns+PyDeBwcs0ztNTKykrNzMzEt+iemZmplZUVL9qwz+wgHG7OPEOLLSws1IULF2ppaWng/ywtLdX58+d3/GQdMHw/n4EGDh9nnqHl1tbW6vr16zU6OloTExM1NjZWVVVfvnypFy9e1Pr6elU52wUAwyCe4YBYX1+vhYWFb3/7Qi+0kzeycLi5bAMAAELiGQAAQuIZAABC4hkAAEKdfr8/8A6DAADAX9yeGw4o+wntZDehvdyeGwAAhkg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQEg8AwBASDwDAEBIPAMAQKjT7/e393sIAAA4CDrdbndgPPd6vWqaZpjzACH7Ce1kN6G9dmM/XbYBAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAChTr/f397vIQAA4CDodLvdgfHc6/WqaZphzgOE7Ce0k92E9tqN/XTZBgAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhP4AHxYts2hUDCoAAAAASUVORK5CYII=)",
+              backgroundSize: "cover",
+              backgroundRepeat: "no-repeat",
             }}
-          >
-            Now
-          </Button>
+            // Quitamos título de accesibilidad interno porque usamos background image
+          ></Button>
         </div>
       </div>
       {selectedEvent && (
@@ -799,7 +801,8 @@ export default function Home() {
             <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
           </p>
           <p>
-            <strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
+            <strong>Descripción:</strong>{" "}
+            {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
           </p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
