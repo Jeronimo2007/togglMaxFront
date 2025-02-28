@@ -531,7 +531,7 @@ export default function Home() {
       const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
       
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}/dates`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/${eventId}/dates`,
         {
           method: "PUT",
           headers: {
