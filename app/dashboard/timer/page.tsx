@@ -833,8 +833,8 @@ export default function Home() {
           <div
             style={{
               position: "absolute",
-              top: `${nowTopOffset - scrollTop}px`, // Se ajusta restando el scroll del contenedor
-              left: `${nowLeftOffset}px`, // Se mantiene fijo en la columna actual
+              top: `${nowTopOffset - (containerRef.current?.scrollTop || 0)}px`, // Ajuste con scroll dentro del calendario
+              left: `${nowLeftOffset - (containerRef.current?.scrollLeft || 0)}px`, // Asegura que no se desplace horizontalmente
               width: `${dayColumnWidth}px`,
               pointerEvents: "none",
               zIndex: 1100,
