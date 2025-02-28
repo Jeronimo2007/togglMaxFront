@@ -833,11 +833,11 @@ export default function Home() {
           <div
             style={{
               position: "absolute",
-              top: `${nowTopOffset - (containerRef.current?.scrollTop || 0)}px`, // Ajuste con scroll dentro del calendario
-              left: `${nowLeftOffset - (containerRef.current?.scrollLeft || 0)}px`, // Asegura que no se desplace horizontalmente
+              top: `${(minutesSinceMidnight / 1440) * calendarContainerHeight}px`, // Se mantiene en la hora actual
+              left: `${nowLeftOffset}px`, // Se mantiene dentro de la columna correcta
               width: `${dayColumnWidth}px`,
+              zIndex: 1000, // Se mantiene por encima de otros eventos pero dentro del calendario
               pointerEvents: "none",
-              zIndex: 1100,
             }}
           >
             <div style={{ position: "relative", borderTop: "2px solid white" }}>
@@ -863,6 +863,7 @@ export default function Home() {
             </div>
           </div>
         )}
+
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
