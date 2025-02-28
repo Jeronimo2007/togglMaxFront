@@ -42,7 +42,7 @@ interface Event {
   end: string;
   display: string;
   allDay: boolean;
-  editable: boolean; // set true so that the event can be dragged/resized
+  editable: boolean;
   durationEditable: boolean;
   eventResizableFromStart: boolean;
   extendedProps: {
@@ -71,7 +71,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   projects
 }) => {
   const adjustTimeZone = (date: Date): string => {
-    if (!date) return '';
+    if (!date) return "";
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - userTimezoneOffset)
       .toISOString()
@@ -93,7 +93,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 type="datetime-local"
                 required
                 className="!bg-[#aa69b9] !text-black"
-                value={newEvent?.start ? adjustTimeZone(newEvent.start) : ''}
+                value={newEvent?.start ? adjustTimeZone(newEvent.start) : ""}
                 onChange={(e) => {
                   const date = new Date(e.target.value);
                   if (!isNaN(date.getTime())) {
@@ -112,7 +112,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                 type="datetime-local"
                 required
                 className="!bg-[#aa69b9] !text-black"
-                value={newEvent?.end ? adjustTimeZone(newEvent.end) : ''}
+                value={newEvent?.end ? adjustTimeZone(newEvent.end) : ""}
                 onChange={(e) => {
                   const date = new Date(e.target.value);
                   if (!isNaN(date.getTime())) {
@@ -256,13 +256,13 @@ export default function Home() {
 
   // Estado para el marcador de "now"
   const [now, setNow] = useState<Date>(new Date());
-  // Estado para el now marker solo en el día actual
+  // Estado para el now marker (línea y botón)
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
   // Estados para calcular el left offset y width de la columna del día actual
   const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
   const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
-  const calendarContainerHeight = 500; // px, altura mínima del contenedor
+  const calendarContainerHeight = 500; // px
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -291,17 +291,22 @@ export default function Home() {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       const view = calendarApi.view;
-      // view.activeStart is the first date of the current view (week/day)
       const viewStart = view.activeStart;
-      // Diferencia en días entre "now" y el inicio de la vista
       const diffTime = now.getTime() - viewStart.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      // Solo si diffDays está entre 0 y 6, entonces "now" está en la semana actual
+
+      // Debug logs para verificar valores
+      console.log("now:", now);
+      console.log("viewStart:", viewStart);
+      console.log("diffDays:", diffDays);
+
       if (diffDays >= 0 && diffDays < 7) {
-        // Accede al contenedor del calendario utilizando cast a any para obtener la propiedad 'el'
         const calendarEl = (calendarRef.current as any).el as HTMLElement;
-        const containerWidth = calendarEl ? calendarEl.getBoundingClientRect().width : 0;
+        const containerWidth = calendarEl
+          ? calendarEl.getBoundingClientRect().width
+          : 0;
         const widthPerDay = containerWidth / 7;
+        console.log("containerWidth:", containerWidth, "widthPerDay:", widthPerDay);
         setNowLeftOffset(diffDays * widthPerDay);
         setDayColumnWidth(widthPerDay);
       } else {
@@ -394,7 +399,7 @@ export default function Home() {
           },
           body: JSON.stringify({
             bill: updateProjectRate,
-            color: updateProjectColor,
+            color: updateProjectColor
           }),
         }
       );
@@ -424,12 +429,12 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           },
           body: JSON.stringify({
             project_name: newProjectName,
             bill: hourlyRate,
-            color: newProjectColor,
+            color: newProjectColor
           }),
         }
       );
@@ -455,15 +460,15 @@ export default function Home() {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/get`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
         }
       );
       const data = await response.json();
       if (data.status === "success") {
         const projectsData = data.data.map((project: any) => ({
           ...project,
-          color: project.color || "#999999",
+          color: project.color || "#999999"
         }));
         setProjects(projectsData);
         setCalendarKey(Date.now());
@@ -479,8 +484,8 @@ export default function Home() {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
         }
       );
       const data = await response.json();
@@ -498,8 +503,8 @@ export default function Home() {
           extendedProps: {
             project: event.project,
             duracion: formatTime(event.duracion),
-            descripcion: event.descripcion,
-          },
+            descripcion: event.descripcion
+          }
         }));
         setEvents(formattedEvents);
         if (calendarRef.current) {
@@ -548,7 +553,7 @@ export default function Home() {
       start: clickedDate,
       end: end,
       project: "",
-      descripcion: "",
+      descripcion: ""
     });
   };
 
@@ -557,7 +562,7 @@ export default function Home() {
       start: info.start,
       end: info.end,
       project: "",
-      descripcion: "",
+      descripcion: ""
     });
   };
 
@@ -577,13 +582,13 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           },
           body: JSON.stringify({
             project: newEvent.project,
             descripcion: newEvent.descripcion || "",
             fecha_inicio: newEvent.start.toISOString(),
-            fecha_fin: newEvent.end.toISOString(),
+            fecha_fin: newEvent.end.toISOString()
           }),
         }
       );
@@ -612,12 +617,12 @@ export default function Home() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           },
           body: JSON.stringify({
             project: selectedProject,
             descripcion: taskDescription || "",
-            duracion: time,
+            duracion: time
           }),
         }
       );
@@ -639,8 +644,7 @@ export default function Home() {
     try {
       const eventId = info.event.id;
       const newStart: Date = info.event.start;
-      const newEnd: Date =
-        info.event.end || new Date(newStart.getTime() + 3600000);
+      const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
       
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/${eventId}/dates`,
@@ -648,19 +652,17 @@ export default function Home() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           },
           body: JSON.stringify({
             fecha_inicio: newStart.toISOString(),
-            fecha_fin: newEnd.toISOString(),
+            fecha_fin: newEnd.toISOString()
           }),
         }
       );
       if (!response.ok) {
         const errorData = await response.json();
-        alert(
-          errorData.detail || "Error al actualizar las fechas del evento"
-        );
+        alert(errorData.detail || "Error al actualizar las fechas del evento");
         info.revert();
       }
     } catch (error) {
@@ -695,7 +697,7 @@ export default function Home() {
         <h2 className="text-lg font-bold">Temporizador</h2>
         <span className="text-2xl">{formatTime(time)}</span>
         <div className="space-x-2">
-          <Button onClick={() => setIsRunning(!isRunning)}>
+          <Button onClick={() => setIsRunning((prev) => !prev)}>
             {isRunning ? "Pause" : "Start"}
           </Button>
           <Button onClick={saveTimerEvent}>Stop & Save</Button>
@@ -779,7 +781,7 @@ export default function Home() {
           eventResize={handleEventResize}
           eventClassNames={({ event }) => {
             const project = projects.find((p) => p.name === event.extendedProps.project);
-            return project ? `border-accent text-primary-foreground` : "";
+            return project ? "border-accent text-primary-foreground" : "";
           }}
           eventDidMount={(info) => {
             const project = projects.find((p) => p.name === info.event.extendedProps.project);
@@ -788,7 +790,7 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: Solo se mostrará la línea y botón en el día actual */}
+        {/* Now Marker: Se muestra la línea y el botón si dayColumnWidth > 0 */}
         {dayColumnWidth > 0 && (
           <div
             style={{
@@ -797,7 +799,7 @@ export default function Home() {
               left: `${nowLeftOffset}px`,
               width: `${dayColumnWidth}px`,
               pointerEvents: "none",
-              zIndex: 1100 // Z index aumentado para asegurar que se muestre por encima de otros elementos
+              zIndex: 1100
             }}
           >
             <div style={{ position: "relative", borderTop: "2px solid white" }}>
@@ -814,7 +816,7 @@ export default function Home() {
                   width: "20px",
                   height: "20px",
                   cursor: "pointer",
-                  zIndex: 1200 // Z index para el botón aún más alto
+                  zIndex: 1200
                 }}
                 title="Iniciar timer"
               ></button>
@@ -832,8 +834,7 @@ export default function Home() {
             <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
           </p>
           <p>
-            <strong>Descripción:</strong>{" "}
-            {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
+            <strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
           </p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
