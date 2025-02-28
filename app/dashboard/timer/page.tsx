@@ -21,14 +21,12 @@ import * as Dialog from "@radix-ui/react-dialog";
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from "@fullcalendar/core";
 
-// New: Utility function to format seconds into HH:MM:SS string
+// Utility function to format seconds into HH:MM:SS string
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
 // Interfaces
@@ -246,7 +244,6 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, 
 
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
-  // Nuevo ref para el contenedor del calendario
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [time, setTime] = useState<number>(0);
@@ -274,7 +271,7 @@ export default function Home() {
   // Estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
 
-  // Use ResizeObserver on container ref to update calendarContainerHeight when resized
+  // Actualiza calendarContainerHeight usando ResizeObserver
   useEffect(() => {
     if (containerRef.current) {
       const resizeObserver = new ResizeObserver((entries) => {
@@ -287,7 +284,7 @@ export default function Home() {
     }
   }, []);
 
-  // Actualiza la altura del contenedor al montar o cuando calendarKey cambia (como fallback)
+  // Actualiza calendarContainerHeight al montar o al redimensionar la ventana
   useEffect(() => {
     const updateContainerHeight = () => {
       if (containerRef.current) {
@@ -299,7 +296,7 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
 
-  // Actualiza "now" cada segundo (anteriormente era cada minuto)
+  // Actualiza "now" cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -678,6 +675,10 @@ export default function Home() {
     setIsNowModalOpen(false);
   };
 
+  // Calculate the top offset for the now marker based on current time.
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
+
   return (
     <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
@@ -785,17 +786,25 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Nuevo Now Button: posicion fija dentro del contenedor del calendario */}
+        {/* Botón Now posicionado en el calendario, en la hora actual */}
         <div style={{
           position: "absolute",
-          top: "10px",
-          right: "10px",
-          zIndex: 1200
+          top: `${nowTopOffset}px`,
+          // Assuming the calendar shows days in columns (e.g., 7 days), we position the now marker in the middle of the actual day column.
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1200,
+          pointerEvents: "auto"
         }}>
           <Button
             onClick={handleNowMarkerClick}
             title="Iniciar timer ahora"
-            className="px-3 py-1 bg-white text-black rounded shadow"
+            className="rounded-full bg-white text-black shadow-lg p-2 border border-gray-200"
+            style={{
+              // Custom design from provided image: round button with shadow and subtle border.
+              width: "40px",
+              height: "40px"
+            }}
           >
             Now
           </Button>
