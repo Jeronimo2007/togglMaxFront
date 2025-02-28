@@ -263,8 +263,9 @@ export default function Home() {
   const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
   const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
-  // Estado para scroll vertical del contenedor
+  // Estado para scroll vertical y horizontal del contenedor
   const [scrollTop, setScrollTop] = useState<number>(0);
+  const [scrollLeft, setScrollLeft] = useState<number>(0);
 
   // Usamos un estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
@@ -281,12 +282,13 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
 
-  // Actualiza scrollTop cuando se hace scroll en el contenedor del calendario
+  // Actualiza scrollTop y scrollLeft cuando se hace scroll en el contenedor del calendario
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
       const handleScroll = () => {
         setScrollTop(container.scrollTop);
+        setScrollLeft(container.scrollLeft);
       };
       container.addEventListener("scroll", handleScroll);
       return () => container.removeEventListener("scroll", handleScroll);
@@ -733,7 +735,7 @@ export default function Home() {
           <Button onClick={() => setIsRunning((prev) => !prev)}>
             {isRunning ? "Pause" : "Start"}
           </Button>
-          <Button onClick={saveTimerEvent}>Stop & Save</Button>
+          <Button onClick={saveTimerEvent}>Stop &amp; Save</Button>
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
         <div className="mt-4">
@@ -793,6 +795,7 @@ export default function Home() {
         style={{
           resize: "vertical",
           overflowY: "auto",
+          overflowX: "auto",
           minHeight: `${calendarContainerHeight}px`
         }}
       >
@@ -825,13 +828,14 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: Ajustado la posición para restar scrollTop */}
+        {/* Now Marker: Ajustado para restar scrollLeft y scrollTop */}
         {dayColumnWidth > 0 && (
           <div
             style={{
               position: "absolute",
-              top: `${nowTopOffset}px`,
-              left: `${nowLeftOffset}px`,
+              top: `${nowTopOffset - scrollTop}px`,
+              // Ahora se resta scrollLeft para compensar el desplazamiento horizontal
+              left: `${nowLeftOffset - scrollLeft}px`,
               width: `${dayColumnWidth}px`,
               pointerEvents: "none",
               zIndex: 1100
