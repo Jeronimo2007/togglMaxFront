@@ -257,6 +257,9 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
+  const scrollableCalendarContainer = useRef<HTMLDivElement | null>(null);
+
+
   // Estado para el marcador de "now"
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
@@ -281,6 +284,19 @@ export default function Home() {
     window.addEventListener("resize", updateContainerHeight);
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
+
+
+  useEffect(() => {
+    if (calendarRef.current) {
+      // Buscamos el contenedor del scroll dentro del calendario
+      const scrollContainer = document.querySelector('.fc-scroller') as HTMLDivElement;
+      if (scrollContainer) {
+        scrollableCalendarContainer.current = scrollContainer;
+      }
+    }
+  }, []);
+
+
 
   // Actualiza scrollTop y scrollLeft cuando se hace scroll en el contenedor del calendario
   useEffect(() => {
@@ -833,10 +849,10 @@ export default function Home() {
           <div
             style={{
               position: "absolute",
-              top: `${(minutesSinceMidnight / 1440) * calendarContainerHeight}px`, // Se mantiene en la hora actual
-              left: `${nowLeftOffset}px`, // Se mantiene dentro de la columna correcta
+              top: `${(minutesSinceMidnight / 1440) * calendarContainerHeight - (scrollableCalendarContainer.current?.scrollTop || 0)}px`, // Se mantiene en la hora actual ajustada al scroll
+              left: `${nowLeftOffset}px`,
               width: `${dayColumnWidth}px`,
-              zIndex: 1000, // Se mantiene por encima de otros eventos pero dentro del calendario
+              zIndex: 1000,
               pointerEvents: "none",
             }}
           >
@@ -863,6 +879,8 @@ export default function Home() {
             </div>
           </div>
         )}
+
+
 
       </div>
       {selectedEvent && (
