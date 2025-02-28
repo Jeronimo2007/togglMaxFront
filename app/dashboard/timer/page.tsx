@@ -8,7 +8,13 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -36,6 +42,7 @@ interface Event {
   end: string;
   display: string;
   allDay: boolean;
+  // IMPORTANT: Set these to true so that the event can be dragged/resized
   editable: boolean;
   durationEditable: boolean;
   eventResizableFromStart: boolean;
@@ -56,11 +63,20 @@ interface AddEventModalProps {
 }
 
 // Modal para agregar evento
-const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent, setNewEvent, onSave, projects }) => {
+const AddEventModal: React.FC<AddEventModalProps> = ({
+  isOpen,
+  onClose,
+  newEvent,
+  setNewEvent,
+  onSave,
+  projects
+}) => {
   const adjustTimeZone = (date: Date): string => {
     if (!date) return '';
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - userTimezoneOffset).toISOString().slice(0, 16);
+    return new Date(date.getTime() - userTimezoneOffset)
+      .toISOString()
+      .slice(0, 16);
   };
 
   return (
@@ -111,9 +127,11 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
             </div>
             <div>
               <Label>Proyecto</Label>
-              <Select 
-                value={newEvent?.project} 
-                onValueChange={(value) => setNewEvent({...newEvent!, project: value})}
+              <Select
+                value={newEvent?.project}
+                onValueChange={(value) =>
+                  setNewEvent({ ...newEvent!, project: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un proyecto" />
@@ -131,7 +149,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose, newEvent
               <Label>Descripción (Opcional)</Label>
               <Textarea
                 value={newEvent?.descripcion}
-                onChange={(e) => setNewEvent({...newEvent!, descripcion: e.target.value})}
+                onChange={(e) =>
+                  setNewEvent({ ...newEvent!, descripcion: e.target.value })
+                }
               />
             </div>
             <div className="flex justify-end space-x-2">
@@ -173,7 +193,9 @@ export default function Home() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   const deleteEvent = async (eventId: string): Promise<void> => {
@@ -181,19 +203,19 @@ export default function Home() {
       console.error("ID de evento no proporcionado");
       return;
     }
-
     if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) {
       return;
     }
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       if (response.ok) {
         setSelectedEvent(null);
         fetchEvents();
@@ -208,18 +230,23 @@ export default function Home() {
   };
 
   const deleteProject = async (projectName: string): Promise<void> => {
-    if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
+    if (
+      !confirm(
+        `¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`
+      )
+    ) {
       return;
     }
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/delete/${projectName}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/delete/${projectName}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       if (response.ok) {
         if (selectedProject === projectName) {
           setSelectedProject("");
@@ -276,34 +303,34 @@ export default function Home() {
       alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
       return;
     }
-
     setIsCreatingProject(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          project_name: newProjectName,
-          bill: hourlyRate,
-          color: newProjectColor
-        })
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/add`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            project_name: newProjectName,
+            bill: hourlyRate,
+            color: newProjectColor,
+          }),
+        }
+      );
       if (!response.ok) {
-        throw new Error('Error al crear el proyecto');
+        throw new Error("Error al crear el proyecto");
       }
-
       await fetchProjects();
       setNewProjectName("");
       setHourlyRate(null);
       setNewProjectColor("#aa69b9");
       setIsProjectModalOpen(false);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al crear el proyecto');
+      console.error("Error:", error);
+      alert("Error al crear el proyecto");
     } finally {
       setIsCreatingProject(false);
     }
@@ -311,14 +338,19 @@ export default function Home() {
 
   const fetchProjects = async (): Promise<void> => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/project/get`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/project/get`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       const data = await response.json();
       if (data.status === "success") {
         const projectsData = data.data.map((project: any) => ({
           ...project,
-          color: project.color || "#999999"
+          color: project.color || "#999999",
         }));
         setProjects(projectsData);
         setCalendarKey(Date.now());
@@ -330,9 +362,14 @@ export default function Home() {
 
   const fetchEvents = async (): Promise<void> => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       const data = await response.json();
       if (data.status === "success") {
         const formattedEvents = data.data.map((event: any) => ({
@@ -342,9 +379,10 @@ export default function Home() {
           end: new Date(event.fecha_fin).toISOString(),
           display: "block",
           allDay: false,
-          editable: false,
-          durationEditable: false,
-          eventResizableFromStart: false,
+          // Set events as editable so they can be dragged/resized
+          editable: true,
+          durationEditable: true,
+          eventResizableFromStart: true,
           extendedProps: {
             project: event.project,
             duracion: formatTime(event.duracion),
@@ -363,24 +401,20 @@ export default function Home() {
 
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         fetchEvents();
       }
     };
-
     const handleFocus = () => {
       fetchEvents();
     };
-
     fetchProjects();
     fetchEvents();
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -398,7 +432,6 @@ export default function Home() {
     const clickedDate = new Date(info.date);
     const end = new Date(clickedDate);
     end.setHours(end.getHours() + 1);
-
     setNewEvent({
       start: clickedDate,
       end: end,
@@ -421,27 +454,27 @@ export default function Home() {
       alert("Por favor, selecciona un proyecto");
       return;
     }
-
     if (newEvent.end <= newEvent.start) {
       alert("La fecha de fin debe ser posterior a la fecha de inicio");
       return;
     }
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/manual/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          project: newEvent.project,
-          descripcion: newEvent.descripcion || '',
-          fecha_inicio: newEvent.start.toISOString(),
-          fecha_fin: newEvent.end.toISOString(),
-        }),
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/manual/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            project: newEvent.project,
+            descripcion: newEvent.descripcion || "",
+            fecha_inicio: newEvent.start.toISOString(),
+            fecha_fin: newEvent.end.toISOString(),
+          }),
+        }
+      );
       if (response.ok) {
         setNewEvent(null);
         fetchEvents();
@@ -460,21 +493,22 @@ export default function Home() {
       alert("Por favor, selecciona un proyecto");
       return;
     }
-
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          project: selectedProject,
-          descripcion: taskDescription || '',
-          duracion: time,
-        }),
-      });
-
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            project: selectedProject,
+            descripcion: taskDescription || "",
+            duracion: time,
+          }),
+        }
+      );
       if (response.ok) {
         setTime(0);
         setIsRunning(false);
@@ -496,17 +530,20 @@ export default function Home() {
       const newStart: Date = info.event.start;
       const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}/dates`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
-        },
-        body: JSON.stringify({
-          fecha_inicio: newStart.toISOString(),
-          fecha_fin: newEnd.toISOString(),
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/${eventId}/dates`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            fecha_inicio: newStart.toISOString(),
+            fecha_fin: newEnd.toISOString(),
+          }),
+        }
+      );
       if (!response.ok) {
         const errorData = await response.json();
         alert(errorData.detail || "Error al actualizar las fechas del evento");
@@ -529,7 +566,7 @@ export default function Home() {
     await updateEventDates(info);
   };
 
-  // Función auxiliar para generar colores armónicos (si se requiere)
+  // Función auxiliar para generar colores armónicos (opcional)
   const generateHarmoniousColors = (numColors: number): string[] => {
     const colors = [];
     const hueStep = 360 / numColors;
@@ -545,7 +582,6 @@ export default function Home() {
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
         <h2 className="text-lg font-bold">Temporizador</h2>
         <span className="text-2xl">{formatTime(time)}</span>
-
         <div className="space-x-2">
           <Button onClick={() => setIsRunning(!isRunning)}>
             {isRunning ? "Pause" : "Start"}
@@ -553,7 +589,6 @@ export default function Home() {
           <Button onClick={saveTimerEvent}>Stop & Save</Button>
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
-
         <div className="mt-4">
           <label className="block text-sm">Proyecto:</label>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
@@ -569,7 +604,6 @@ export default function Home() {
             </SelectContent>
           </Select>
         </div>
-
         {selectedProject && (
           <div className="flex justify-start mt-2 space-x-2">
             <Button
@@ -580,7 +614,7 @@ export default function Home() {
             </Button>
             <Button
               onClick={() => {
-                const proj = projects.find(p => p.name === selectedProject);
+                const proj = projects.find((p) => p.name === selectedProject);
                 setUpdateProjectColor(proj?.color || "#aa69b9");
                 setUpdateProjectRate(0);
                 setIsUpdateProjectModalOpen(true);
@@ -591,7 +625,6 @@ export default function Home() {
             </Button>
           </div>
         )}
-
         <div className="mt-4">
           <label className="block text-sm">Descripción de la tarea (Opcional):</label>
           <Textarea
@@ -600,25 +633,23 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
-
-        <Button 
-          onClick={() => setIsProjectModalOpen(true)}
-          className="w-full mt-4"
-        >
+        <Button onClick={() => setIsProjectModalOpen(true)} className="w-full mt-4">
           Crear Nuevo Proyecto
         </Button>
       </div>
-
-      <div className="resizable-calendar-container" style={{ resize: 'vertical', overflow: 'hidden', minHeight: '500px' }}>
+      <div
+        className="resizable-calendar-container"
+        style={{ resize: "vertical", overflow: "hidden", minHeight: "500px" }}
+      >
         <FullCalendar
           key={calendarKey}
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,timeGridDay",
           }}
           editable={true}
           selectable
@@ -629,28 +660,33 @@ export default function Home() {
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
           eventClassNames={({ event }) => {
-            const project = projects.find(p => p.name === event.extendedProps.project);
-            return project ? `border-accent text-primary-foreground` : '';
+            const project = projects.find((p) => p.name === event.extendedProps.project);
+            return project ? `border-accent text-primary-foreground` : "";
           }}
           eventDidMount={(info) => {
-            const project = projects.find(p => p.name === info.event.extendedProps.project);
-            const color = project ? project.color : '#999999';
+            const project = projects.find((p) => p.name === info.event.extendedProps.project);
+            const color = project ? project.color : "#999999";
             info.el.style.backgroundColor = color;
             info.el.style.borderColor = color;
           }}
         />
       </div>
-
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
-          <p><strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}</p>
-          <p><strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}</p>
-          <p><strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || 'Sin descripción'}</p>
+          <p>
+            <strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}
+          </p>
+          <p>
+            <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
+          </p>
+          <p>
+            <strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
+          </p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
-            <Button 
-              onClick={() => deleteEvent(selectedEvent.id)} 
+            <Button
+              onClick={() => deleteEvent(selectedEvent.id)}
               className="bg-red-500 text-white hover:bg-red-700"
             >
               Eliminar Evento
@@ -658,7 +694,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
       <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
@@ -704,7 +739,6 @@ export default function Home() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
       <Dialog.Root open={isUpdateProjectModalOpen} onOpenChange={setIsUpdateProjectModalOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
@@ -740,7 +774,6 @@ export default function Home() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-
       <AddEventModal
         isOpen={newEvent !== null}
         onClose={() => setNewEvent(null)}
