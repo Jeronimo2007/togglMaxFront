@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
-import type { EventApi, EventSourceApi } from "@fullcalendar/core";
+import type { EventApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
+import type { DateClickArg } from "@fullcalendar/interaction";  // Updated import for DateClickArg
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
+import interactionPlugin from "@fullcalendar/interaction";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,10 +19,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import * as Dialog from "@radix-ui/react-dialog";
-import type { DateSelectArg } from "@fullcalendar/core";
-import { EventClickArg } from "@fullcalendar/core";
 
-// Utility function to format seconds into HH:MM:SS string
+// Utility function to format seconds into HH:MM:SS
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -174,7 +173,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
 };
 
-// Modal para iniciar el timer desde el marcador de "now"
+// Modal para iniciar el timer desde el marcador "Now"
 interface NowTimerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -264,14 +263,14 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
-  // Estado para el marcador de "now"
+  // Estado para el marcador de "Now" que muestra la hora actual
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
 
   // Estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
 
-  // Actualiza calendarContainerHeight usando ResizeObserver
+  // Actualización del contenedor mediante ResizeObserver
   useEffect(() => {
     if (containerRef.current) {
       const resizeObserver = new ResizeObserver((entries) => {
@@ -284,7 +283,7 @@ export default function Home() {
     }
   }, []);
 
-  // Actualiza calendarContainerHeight al montar o al redimensionar la ventana
+  // Actualiza la altura del contenedor al montar o redimensionar la ventana
   useEffect(() => {
     const updateContainerHeight = () => {
       if (containerRef.current) {
@@ -296,75 +295,15 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
 
-  // Actualiza "now" cada segundo y actualiza el evento "now" en el calendario
+  // Actualiza "now" cada segundo para que el marcador se posicione con la hora actual
   useEffect(() => {
     const interval = setInterval(() => {
-      const newNow = new Date();
-      setNow(newNow);
-      
-      // Actualizar el evento "now" en el calendario
-      if (calendarRef.current) {
-        const calendarApi = calendarRef.current.getApi();
-        
-        // Eliminar el evento "now" anterior si existe
-        const existingNowEvent = calendarApi.getEventById('now-marker');
-        if (existingNowEvent) {
-          existingNowEvent.remove();
-        }
-        
-        // Crear un nuevo evento "now" en la hora actual
-        const endTime = new Date(newNow);
-        endTime.setMinutes(endTime.getMinutes() + 30); // El evento dura 30 minutos por defecto
-        
-        calendarApi.addEvent({
-          id: 'now-marker',
-          title: 'NOW',
-          start: newNow,
-          end: endTime,
-          backgroundColor: '#4CAF50',
-          borderColor: '#4CAF50',
-          textColor: '#FFFFFF',
-          editable: false,
-          classNames: ['now-marker-event'],
-          extendedProps: {
-            isNowMarker: true
-          }
-        });
-        
-        // Si estamos en vista de día o semana, desplazar a la hora actual
-        const view = calendarApi.view;
-        if (view.type === 'timeGridDay' || view.type === 'timeGridWeek') {
-          calendarApi.scrollToTime({ hour: newNow.getHours(), minute: newNow.getMinutes() });
-        }
-      }
-    }, 60000); // Actualizar cada minuto
-    
-    // Crear el evento "now" inicial
-    if (calendarRef.current) {
-      const calendarApi = calendarRef.current.getApi();
-      const endTime = new Date(now);
-      endTime.setMinutes(endTime.getMinutes() + 30);
-      
-      calendarApi.addEvent({
-        id: 'now-marker',
-        title: 'NOW',
-        start: now,
-        end: endTime,
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
-        textColor: '#FFFFFF',
-        editable: false,
-        classNames: ['now-marker-event'],
-        extendedProps: {
-          isNowMarker: true
-        }
-      });
-    }
-    
+      setNow(new Date());
+    }, 1000);
     return () => clearInterval(interval);
-  }, [calendarRef.current]);
+  }, []);
 
-  // Funciones para eliminar, actualizar, crear proyectos y eventos...
+  // Función para eliminar evento
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
       console.error("ID de evento no proporcionado");
@@ -396,6 +335,7 @@ export default function Home() {
     }
   };
 
+  // Función para eliminar proyecto
   const deleteProject = async (projectName: string): Promise<void> => {
     if (!confirm(`¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`)) {
       return;
@@ -426,6 +366,7 @@ export default function Home() {
     }
   };
 
+  // Función para actualizar proyecto
   const updateProject = async (): Promise<void> => {
     if (!selectedProject) return;
     if (updateProjectRate === null) {
@@ -460,6 +401,7 @@ export default function Home() {
     }
   };
 
+  // Función para crear proyecto
   const createProject = async () => {
     if (!newProjectName.trim() || hourlyRate === null) {
       alert("Por favor ingrese un nombre de proyecto y su tarifa por hora");
@@ -498,6 +440,7 @@ export default function Home() {
     }
   };
 
+  // Función para obtener proyectos
   const fetchProjects = async (): Promise<void> => {
     try {
       const response = await fetch(
@@ -522,6 +465,7 @@ export default function Home() {
     }
   };
 
+  // Función para obtener eventos
   const fetchEvents = async (): Promise<void> => {
     try {
       const response = await fetch(
@@ -560,6 +504,7 @@ export default function Home() {
     }
   };
 
+  // Configura eventos de actualización cuando la pestaña vuelva a estar visible o la ventana gane foco
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -579,6 +524,7 @@ export default function Home() {
     };
   }, []);
 
+  // Actualiza el temporizador si está corriendo
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isRunning) {
@@ -689,7 +635,6 @@ export default function Home() {
       const eventId = info.event.id;
       const newStart: Date = info.event.start;
       const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
-
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/${eventId}/dates`,
         {
@@ -724,6 +669,7 @@ export default function Home() {
     await updateEventDates(info);
   };
 
+  // Muestra el modal para iniciar el timer desde el botón "Now"
   const handleNowMarkerClick = () => {
     setIsNowModalOpen(true);
   };
@@ -735,7 +681,8 @@ export default function Home() {
     setIsNowModalOpen(false);
   };
 
-  // Calculate the top offset for the now marker based on current time.
+  // Cálculo para posicionar el botón "Now" en la posición actual
+  // Calcula los minutos transcurridos desde la medianoche (incluyendo fracción de minuto)
   const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
@@ -757,7 +704,7 @@ export default function Home() {
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
         <div className="mt-4">
-          <label className="block text-sm">Proyecto:</label>
+          <Label className="block text-sm">Proyecto:</Label>
           <Select value={selectedProject} onValueChange={setSelectedProject}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Seleccionar proyecto" />
@@ -793,9 +740,9 @@ export default function Home() {
           </div>
         )}
         <div className="mt-4">
-          <label className="block text-sm">
+          <Label className="block text-sm">
             Descripción de la tarea (Opcional):
-          </label>
+          </Label>
           <Textarea
             placeholder="Describe tu tarea..."
             value={taskDescription}
@@ -806,7 +753,7 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Calendario con contenedor resizable que permite expandir hacia abajo */}
+      {/* Calendario con contenedor resizable */}
       <div
         ref={containerRef}
         className="resizable-calendar-container relative w-full"
@@ -846,11 +793,10 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Botón Now posicionado en el calendario, en la hora actual */}
+        {/* Botón "Now": se posiciona dinámicamente según la hora actual y se actualiza cada segundo */}
         <div style={{
           position: "absolute",
           top: `${nowTopOffset}px`,
-          // Assuming the calendar shows days in columns (e.g., 7 days), we position the now marker in the middle of the actual day column.
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 1200,
@@ -861,7 +807,6 @@ export default function Home() {
             title="Iniciar timer ahora"
             className="rounded-full bg-white text-black shadow-lg p-2 border border-gray-200"
             style={{
-              // Custom design from provided image: round button with shadow and subtle border.
               width: "40px",
               height: "40px"
             }}
