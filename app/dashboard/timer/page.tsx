@@ -796,7 +796,8 @@ export default function Home() {
               top: `${nowTopOffset}px`,
               left: `${nowLeftOffset}px`,
               width: `${dayColumnWidth}px`,
-              pointerEvents: "none"
+              pointerEvents: "none",
+              zIndex: 1100 // Z index aumentado para asegurar que se muestre por encima de otros elementos
             }}
           >
             <div style={{ position: "relative", borderTop: "2px solid white" }}>
@@ -812,7 +813,8 @@ export default function Home() {
                   borderRadius: "50%",
                   width: "20px",
                   height: "20px",
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  zIndex: 1200 // Z index para el botón aún más alto
                 }}
                 title="Iniciar timer"
               ></button>
