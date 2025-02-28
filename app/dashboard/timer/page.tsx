@@ -21,6 +21,16 @@ import * as Dialog from "@radix-ui/react-dialog";
 import type { DateSelectArg } from "@fullcalendar/core";
 import { EventClickArg } from "@fullcalendar/core";
 
+// New: Utility function to format seconds into HH:MM:SS string
+function formatTime(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  return `${hours.toString().padStart(2, "0")}:${minutes
+    .toString()
+    .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
 // Interfaces
 interface Project {
   id: string;
@@ -257,19 +267,11 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
-  const scrollableCalendarContainer = useRef<HTMLDivElement | null>(null);
-
   // Estado para el marcador de "now"
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
-  const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
-  const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
-  // Estado para scroll vertical y horizontal del contenedor
-  const [scrollTop, setScrollTop] = useState<number>(0);
-  const [scrollLeft, setScrollLeft] = useState<number>(0);
-
-  // Usamos un estado para la altura real del contenedor del calendario
+  // Estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
 
   // Use ResizeObserver on container ref to update calendarContainerHeight when resized
@@ -297,38 +299,6 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
 
-  useEffect(() => {
-    if (calendarRef.current) {
-      // Buscamos el contenedor del scroll dentro del calendario
-      const scrollContainer = document.querySelector('.fc-scroller') as HTMLDivElement;
-      if (scrollContainer) {
-        scrollableCalendarContainer.current = scrollContainer;
-      }
-    }
-  }, []);
-
-  // Actualiza scrollTop y scrollLeft cuando se hace scroll en el contenedor del calendario
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      const handleScroll = () => {
-        setScrollTop(container.scrollTop);
-        setScrollLeft(container.scrollLeft);
-      };
-      container.addEventListener("scroll", handleScroll);
-      return () => container.removeEventListener("scroll", handleScroll);
-    }
-  }, []);
-
-  const formatTime = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   // Actualiza "now" cada segundo (anteriormente era cada minuto)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -336,49 +306,6 @@ export default function Home() {
     }, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const minutesSinceMidnight =
-    now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  // Calcular nowTopOffset usando la altura del contenedor y restando el scrollTop
-  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
-
-  // Función para recalcular nowLeftOffset y dayColumnWidth
-  const recalcNowMarker = useCallback(() => {
-    if (calendarRef.current && containerRef.current) {
-      const containerWidth = containerRef.current.getBoundingClientRect().width;
-      const effectiveWidth = containerWidth || window.innerWidth;
-
-      const calendarApi = calendarRef.current.getApi();
-      const view = calendarApi.view;
-      const viewStart = view.activeStart;
-      const diffTime = now.getTime() - viewStart.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      console.log("now:", now);
-      console.log("viewStart:", viewStart);
-      console.log("diffDays:", diffDays);
-      console.log("containerWidth:", effectiveWidth, "widthPerDay:", effectiveWidth / 7);
-
-      if (diffDays >= 0 && diffDays < 7) {
-        const widthPerDay = effectiveWidth / 7;
-        setNowLeftOffset(diffDays * widthPerDay);
-        setDayColumnWidth(widthPerDay);
-      } else {
-        setNowLeftOffset(0);
-        setDayColumnWidth(0);
-      }
-    }
-  }, [now]);
-
-  useEffect(() => {
-    recalcNowMarker();
-  }, [now, calendarKey, recalcNowMarker]);
-
-  useEffect(() => {
-    const handleResize = () => recalcNowMarker();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [recalcNowMarker]);
 
   // Funciones para eliminar, actualizar, crear proyectos y eventos...
   const deleteEvent = async (eventId: string): Promise<void> => {
@@ -755,12 +682,17 @@ export default function Home() {
     <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
         <h2 className="text-lg font-bold">Temporizador</h2>
-        <span className="text-2xl">{formatTime(time)}</span>
+        <span className="text-2xl">{(() => {
+          const hours = Math.floor(time / 3600).toString().padStart(2, "0");
+          const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
+          const secs = (time % 60).toString().padStart(2, "0");
+          return `${hours}:${minutes}:${secs}`;
+        })()}</span>
         <div className="space-x-2">
           <Button onClick={() => setIsRunning((prev) => !prev)}>
             {isRunning ? "Pause" : "Start"}
           </Button>
-          <Button onClick={saveTimerEvent}>Stop &amp; Save</Button>
+          <Button onClick={saveTimerEvent}>Stop & Save</Button>
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
         <div className="mt-4">
@@ -813,15 +745,14 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Contenedor del calendario: se usa containerRef para asegurar el ancho visible */}
+      {/* Calendario con contenedor resizable que permite expandir hacia abajo */}
       <div
         ref={containerRef}
         className="resizable-calendar-container relative w-full"
         style={{
           resize: "vertical",
-          overflowY: "auto",
-          overflowX: "auto",
-          minHeight: `${calendarContainerHeight}px`
+          overflow: "auto",
+          height: `${calendarContainerHeight}px`
         }}
       >
         <FullCalendar
@@ -834,6 +765,7 @@ export default function Home() {
             center: "title",
             right: "dayGridMonth,timeGridWeek,timeGridDay"
           }}
+          height={calendarContainerHeight}
           editable={true}
           selectable
           select={handleSelect}
@@ -853,41 +785,21 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: Ajustado para restar scrollLeft y scrollTop */}
-        {dayColumnWidth > 0 && (
-          <div
-            style={{
-              position: "absolute",
-              top: `${(minutesSinceMidnight / 1440) * calendarContainerHeight - (scrollableCalendarContainer.current?.scrollTop || 0)}px`, // Se mantiene en la hora actual ajustada al scroll
-              left: `${nowLeftOffset}px`,
-              width: `${dayColumnWidth}px`,
-              zIndex: 1000,
-              pointerEvents: "none",
-            }}
+        {/* Nuevo Now Button: posicion fija dentro del contenedor del calendario */}
+        <div style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          zIndex: 1200
+        }}>
+          <Button
+            onClick={handleNowMarkerClick}
+            title="Iniciar timer ahora"
+            className="px-3 py-1 bg-white text-black rounded shadow"
           >
-            <div style={{ position: "relative", borderTop: "2px solid white" }}>
-              <button
-                onClick={handleNowMarkerClick}
-                style={{
-                  position: "absolute",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  top: -10,
-                  pointerEvents: "auto",
-                  background: "white",
-                  border: "none",
-                  borderRadius: "50%",
-                  width: "20px",
-                  height: "20px",
-                  cursor: "pointer",
-                  zIndex: 1200,
-                  boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.3)",
-                }}
-                title="Iniciar timer"
-              ></button>
-            </div>
-          </div>
-        )}
+            Now
+          </Button>
+        </div>
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
