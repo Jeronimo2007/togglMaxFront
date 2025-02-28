@@ -794,21 +794,23 @@ export default function Home() {
           }}
         />
         {/* Botón "Now": se posiciona dinámicamente según la hora actual y se actualiza cada segundo */}
-        <div style={{
-          position: "absolute",
-          top: `${nowTopOffset}px`,
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1200,
-          pointerEvents: "auto"
-        }}>
+        <div
+          style={{
+            position: "absolute",
+            top: `${nowTopOffset}px`,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 1200,
+            pointerEvents: "auto"
+          }}
+        >
           <Button
             onClick={handleNowMarkerClick}
             title="Iniciar timer ahora"
-            className="rounded-full bg-white text-black shadow-lg p-2 border border-gray-200"
+            className="rounded-full bg-blue-500 text-white shadow-xl p-3"
             style={{
-              width: "40px",
-              height: "40px"
+              width: "50px",
+              height: "50px"
             }}
           >
             Now
