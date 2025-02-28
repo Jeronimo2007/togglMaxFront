@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
@@ -42,8 +42,7 @@ interface Event {
   end: string;
   display: string;
   allDay: boolean;
-  // IMPORTANT: Set these to true so that the event can be dragged/resized
-  editable: boolean;
+  editable: boolean; // set true so that the event can be dragged/resized
   durationEditable: boolean;
   eventResizableFromStart: boolean;
   extendedProps: {
@@ -167,7 +166,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
 };
 
-// New Modal for starting the timer from the now marker
+// Modal para iniciar el timer desde el marcador de "now"
 interface NowTimerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -221,7 +220,6 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, 
               <Button
                 onClick={() => {
                   onSave(selectedProject, description);
-                  // reset fields after saving
                   setSelectedProject("");
                   setDescription("");
                 }}
@@ -248,19 +246,23 @@ export default function Home() {
   const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
-  // Estado para actualizar proyecto
   const [isUpdateProjectModalOpen, setIsUpdateProjectModalOpen] = useState(false);
   const [updateProjectColor, setUpdateProjectColor] = useState<string>("#aa69b9");
   const [updateProjectRate, setUpdateProjectRate] = useState<number | null>(null);
-  // Nuevo estado para el color seleccionado del proyecto al crear
   const [newProjectColor, setNewProjectColor] = useState<string>("#aa69b9");
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
-  
-  // NEW state for current time for now marker
+
+  // Estado para el marcador de "now"
   const [now, setNow] = useState<Date>(new Date());
+  // Estado para el now marker solo en el día actual
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
+  // Estados para calcular el left offset y width de la columna del día actual
+  const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
+  const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
+
+  const calendarContainerHeight = 500; // px, altura mínima del contenedor
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -271,7 +273,7 @@ export default function Home() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Update current time every minute (or second for smoother update)
+  // Actualizar el estado de "now" cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
@@ -279,12 +281,37 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Compute top offset for now marker.
-  // For simplicity, assume the timeGridWeek view shows 24 hours and the container height is 500px.
-  const calendarContainerHeight = 500; // px (the minHeight of container)
-  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  // Calcular el top offset basado en la hora actual
+  const minutesSinceMidnight =
+    now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
+  // Calcular el left offset y width para la columna del día actual
+  useEffect(() => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const view = calendarApi.view;
+      // view.activeStart is the first date of the current view (week/day)
+      const viewStart = view.activeStart;
+      // Diferencia en días entre "now" y el inicio de la vista
+      const diffTime = now.getTime() - viewStart.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      // Solo si diffDays está entre 0 y 6, entonces "now" está en la semana actual
+      if (diffDays >= 0 && diffDays < 7) {
+        // Accede al contenedor del calendario utilizando cast a any para obtener la propiedad 'el'
+        const calendarEl = (calendarRef.current as any).el as HTMLElement;
+        const containerWidth = calendarEl ? calendarEl.getBoundingClientRect().width : 0;
+        const widthPerDay = containerWidth / 7;
+        setNowLeftOffset(diffDays * widthPerDay);
+        setDayColumnWidth(widthPerDay);
+      } else {
+        setNowLeftOffset(0);
+        setDayColumnWidth(0);
+      }
+    }
+  }, [now, calendarKey]);
+
+  // Funciones para borrar, actualizar, crear proyectos y eventos...
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
       console.error("ID de evento no proporcionado");
@@ -350,7 +377,6 @@ export default function Home() {
     }
   };
 
-  // Función para actualizar proyecto
   const updateProject = async (): Promise<void> => {
     if (!selectedProject) return;
     if (updateProjectRate === null) {
@@ -466,7 +492,6 @@ export default function Home() {
           end: new Date(event.fecha_fin).toISOString(),
           display: "block",
           allDay: false,
-          // Set events as editable so they can be dragged/resized
           editable: true,
           durationEditable: true,
           eventResizableFromStart: true,
@@ -610,12 +635,12 @@ export default function Home() {
     }
   };
 
-  // Función para actualizar las fechas del evento en el backend
   const updateEventDates = async (info: any) => {
     try {
       const eventId = info.event.id;
       const newStart: Date = info.event.start;
-      const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
+      const newEnd: Date =
+        info.event.end || new Date(newStart.getTime() + 3600000);
       
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/${eventId}/dates`,
@@ -633,7 +658,9 @@ export default function Home() {
       );
       if (!response.ok) {
         const errorData = await response.json();
-        alert(errorData.detail || "Error al actualizar las fechas del evento");
+        alert(
+          errorData.detail || "Error al actualizar las fechas del evento"
+        );
         info.revert();
       }
     } catch (error) {
@@ -643,33 +670,18 @@ export default function Home() {
     }
   };
 
-  // Handler para cuando se mueve (drag & drop) un evento
   const handleEventDrop = async (info: any) => {
     await updateEventDates(info);
   };
 
-  // Handler para cuando se redimensiona un evento (cambio de duración)
   const handleEventResize = async (info: any) => {
     await updateEventDates(info);
   };
 
-  // Función auxiliar para generar colores armónicos (opcional)
-  const generateHarmoniousColors = (numColors: number): string[] => {
-    const colors = [];
-    const hueStep = 360 / numColors;
-    for (let i = 0; i < numColors; i++) {
-      const hue = i * hueStep;
-      colors.push(`hsl(${hue}, 70%, 50%)`);
-    }
-    return colors;
-  };
-
-  // Handler for when the now marker button is pressed.
   const handleNowMarkerClick = () => {
     setIsNowModalOpen(true);
   };
 
-  // When the NowTimerModal saves, update the top timer inputs and auto-start the timer.
   const handleNowModalSave = (project: string, description: string) => {
     setSelectedProject(project);
     setTaskDescription(description);
@@ -726,7 +738,9 @@ export default function Home() {
           </div>
         )}
         <div className="mt-4">
-          <label className="block text-sm">Descripción de la tarea (Opcional):</label>
+          <label className="block text-sm">
+            Descripción de la tarea (Opcional):
+          </label>
           <Textarea
             placeholder="Describe tu tarea..."
             value={taskDescription}
@@ -739,7 +753,11 @@ export default function Home() {
       </div>
       <div
         className="resizable-calendar-container relative"
-        style={{ resize: "vertical", overflow: "hidden", minHeight: `${calendarContainerHeight}px` }}
+        style={{
+          resize: "vertical",
+          overflow: "hidden",
+          minHeight: `${calendarContainerHeight}px`
+        }}
       >
         <FullCalendar
           key={calendarKey}
@@ -749,7 +767,7 @@ export default function Home() {
           headerToolbar={{
             left: "prev,next today",
             center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
+            right: "dayGridMonth,timeGridWeek,timeGridDay"
           }}
           editable={true}
           selectable
@@ -770,35 +788,37 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: a white horizontal line with a clickable button */}
-        <div 
-          style={{ 
-            position: "absolute", 
-            top: `${nowTopOffset}px`, 
-            left: 0, 
-            width: "100%", 
-            pointerEvents: "none" 
-          }}
-        >
-          <div style={{ position: "relative", borderTop: "2px solid white" }}>
-            <button 
-              onClick={handleNowMarkerClick}
-              style={{ 
-                position: "absolute", 
-                left: 0, 
-                top: -10, 
-                pointerEvents: "auto",
-                background: "white",
-                border: "none",
-                borderRadius: "50%",
-                width: "20px",
-                height: "20px",
-                cursor: "pointer"
-              }}
-              title="Iniciar timer"
-            ></button>
+        {/* Now Marker: Solo se mostrará la línea y botón en el día actual */}
+        {dayColumnWidth > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: `${nowTopOffset}px`,
+              left: `${nowLeftOffset}px`,
+              width: `${dayColumnWidth}px`,
+              pointerEvents: "none"
+            }}
+          >
+            <div style={{ position: "relative", borderTop: "2px solid white" }}>
+              <button
+                onClick={handleNowMarkerClick}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: -10,
+                  pointerEvents: "auto",
+                  background: "white",
+                  border: "none",
+                  borderRadius: "50%",
+                  width: "20px",
+                  height: "20px",
+                  cursor: "pointer"
+                }}
+                title="Iniciar timer"
+              ></button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
@@ -810,7 +830,8 @@ export default function Home() {
             <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
           </p>
           <p>
-            <strong>Descripción:</strong> {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
+            <strong>Descripción:</strong>{" "}
+            {selectedEvent.extendedProps?.descripcion || "Sin descripción"}
           </p>
           <div className="flex justify-between mt-4">
             <Button onClick={() => setSelectedEvent(null)}>Cerrar</Button>
