@@ -167,6 +167,75 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
 };
 
+// New Modal for starting the timer from the now marker
+interface NowTimerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (project: string, description: string) => void;
+  projects: Project[];
+}
+
+const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, projects }) => {
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+
+  return (
+    <Dialog.Root open={isOpen} onOpenChange={onClose}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md max-h-[85vh] overflow-y-auto z-[49]">
+          <Dialog.Title className="text-lg font-bold mb-4">
+            Iniciar Timer Ahora
+          </Dialog.Title>
+          <div className="space-y-4">
+            <div>
+              <Label>Proyecto</Label>
+              <Select
+                value={selectedProject}
+                onValueChange={(value) => setSelectedProject(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona un proyecto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.name}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Descripción</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Agrega una descripción"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Dialog.Close asChild>
+                <Button variant="outline">Cancelar</Button>
+              </Dialog.Close>
+              <Button
+                onClick={() => {
+                  onSave(selectedProject, description);
+                  // reset fields after saving
+                  setSelectedProject("");
+                  setDescription("");
+                }}
+              >
+                Guardar y Empezar
+              </Button>
+            </div>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+};
+
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
   const [time, setTime] = useState<number>(0);
@@ -188,6 +257,10 @@ export default function Home() {
   const [hourlyRate, setHourlyRate] = useState<number | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
+  
+  // NEW state for current time for now marker
+  const [now, setNow] = useState<Date>(new Date());
+  const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -197,6 +270,20 @@ export default function Home() {
       .toString()
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Update current time every minute (or second for smoother update)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Compute top offset for now marker.
+  // For simplicity, assume the timeGridWeek view shows 24 hours and the container height is 500px.
+  const calendarContainerHeight = 500; // px (the minHeight of container)
+  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
@@ -577,6 +664,19 @@ export default function Home() {
     return colors;
   };
 
+  // Handler for when the now marker button is pressed.
+  const handleNowMarkerClick = () => {
+    setIsNowModalOpen(true);
+  };
+
+  // When the NowTimerModal saves, update the top timer inputs and auto-start the timer.
+  const handleNowModalSave = (project: string, description: string) => {
+    setSelectedProject(project);
+    setTaskDescription(description);
+    setIsRunning(true);
+    setIsNowModalOpen(false);
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="p-6 bg-gray-800 text-white rounded-lg space-y-4">
@@ -638,8 +738,8 @@ export default function Home() {
         </Button>
       </div>
       <div
-        className="resizable-calendar-container"
-        style={{ resize: "vertical", overflow: "hidden", minHeight: "500px" }}
+        className="resizable-calendar-container relative"
+        style={{ resize: "vertical", overflow: "hidden", minHeight: `${calendarContainerHeight}px` }}
       >
         <FullCalendar
           key={calendarKey}
@@ -670,6 +770,35 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
+        {/* Now Marker: a white horizontal line with a clickable button */}
+        <div 
+          style={{ 
+            position: "absolute", 
+            top: `${nowTopOffset}px`, 
+            left: 0, 
+            width: "100%", 
+            pointerEvents: "none" 
+          }}
+        >
+          <div style={{ position: "relative", borderTop: "2px solid white" }}>
+            <button 
+              onClick={handleNowMarkerClick}
+              style={{ 
+                position: "absolute", 
+                left: 0, 
+                top: -10, 
+                pointerEvents: "auto",
+                background: "white",
+                border: "none",
+                borderRadius: "50%",
+                width: "20px",
+                height: "20px",
+                cursor: "pointer"
+              }}
+              title="Iniciar timer"
+            ></button>
+          </div>
+        </div>
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
@@ -780,6 +909,12 @@ export default function Home() {
         newEvent={newEvent}
         setNewEvent={setNewEvent}
         onSave={saveNewEvent}
+        projects={projects}
+      />
+      <NowTimerModal
+        isOpen={isNowModalOpen}
+        onClose={() => setIsNowModalOpen(false)}
+        onSave={handleNowModalSave}
         projects={projects}
       />
     </div>
