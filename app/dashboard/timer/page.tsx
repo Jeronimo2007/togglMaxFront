@@ -833,7 +833,7 @@ export default function Home() {
           <div
             style={{
               position: "absolute",
-              top: `${nowTopOffset}px`, // Ajustado para que no se mueva con el scroll
+              top: `${nowTopOffset - scrollTop}px`, // Se ajusta restando el scroll del contenedor
               left: `${nowLeftOffset}px`, // Se mantiene fijo en la columna actual
               width: `${dayColumnWidth}px`,
               pointerEvents: "none",
@@ -845,9 +845,9 @@ export default function Home() {
                 onClick={handleNowMarkerClick}
                 style={{
                   position: "absolute",
-                  left: "50%", // Centrado en la columna
-                  transform: "translateX(-50%)", // Ajuste preciso de centrado
-                  top: -10, // Posición respecto a la línea del tiempo
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  top: -10,
                   pointerEvents: "auto",
                   background: "white",
                   border: "none",
@@ -856,7 +856,7 @@ export default function Home() {
                   height: "20px",
                   cursor: "pointer",
                   zIndex: 1200,
-                  boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.3)", // Mejor apariencia
+                  boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.3)",
                 }}
                 title="Iniciar timer"
               ></button>
