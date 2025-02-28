@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type { EventApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
-import type { DateClickArg } from "@fullcalendar/interaction";  // Updated import for DateClickArg
+import type { DateClickArg } from "@fullcalendar/interaction";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -242,8 +242,8 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, 
 };
 
 export default function Home() {
+  // Eliminamos containerRef y la lógica de ResizeObserver.
   const calendarRef = useRef<FullCalendar>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -267,33 +267,8 @@ export default function Home() {
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
 
-  // Estado para la altura real del contenedor del calendario
-  const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
-
-  // Actualización del contenedor mediante ResizeObserver
-  useEffect(() => {
-    if (containerRef.current) {
-      const resizeObserver = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          setCalendarContainerHeight(entry.contentRect.height);
-        }
-      });
-      resizeObserver.observe(containerRef.current);
-      return () => resizeObserver.disconnect();
-    }
-  }, []);
-
-  // Actualiza la altura del contenedor al montar o redimensionar la ventana
-  useEffect(() => {
-    const updateContainerHeight = () => {
-      if (containerRef.current) {
-        setCalendarContainerHeight(containerRef.current.clientHeight);
-      }
-    };
-    updateContainerHeight();
-    window.addEventListener("resize", updateContainerHeight);
-    return () => window.removeEventListener("resize", updateContainerHeight);
-  }, [calendarKey]);
+  // Fijamos la altura del contenedor del calendario a un valor fijo
+  const calendarContainerHeight = 500;
 
   // Actualiza "now" cada segundo para que el marcador se posicione con la hora actual
   useEffect(() => {
@@ -681,7 +656,6 @@ export default function Home() {
     setIsNowModalOpen(false);
   };
 
-  // Cálculo para posicionar el botón "Now" en la posición actual
   // Calcula los minutos transcurridos desde la medianoche (incluyendo fracción de minuto)
   const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
@@ -753,12 +727,10 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Calendario con contenedor resizable */}
+      {/* Calendario con altura fija */}
       <div
-        ref={containerRef}
-        className="resizable-calendar-container relative w-full"
+        className="relative w-full"
         style={{
-          resize: "vertical",
           overflow: "auto",
           height: `${calendarContainerHeight}px`
         }}
@@ -793,7 +765,7 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Botón "Now": se posiciona dinámicamente según la hora actual y se actualiza cada segundo */}
+        {/* Botón "Now": se posiciona dinámicamente según la hora actual */}
         <div
           style={{
             position: "absolute",
