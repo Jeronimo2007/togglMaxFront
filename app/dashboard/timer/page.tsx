@@ -1,5 +1,3 @@
-"use client"
-
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type { EventApi } from "@fullcalendar/core";
@@ -313,7 +311,7 @@ export default function Home() {
   const minutesSinceMidnight =
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   // Calcular nowTopOffset usando la altura del contenedor y restando el scrollTop
-  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight - scrollTop;
+  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
   // Función para recalcular nowLeftOffset y dayColumnWidth
   const recalcNowMarker = useCallback(() => {
