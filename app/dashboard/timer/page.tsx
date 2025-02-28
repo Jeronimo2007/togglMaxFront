@@ -263,8 +263,20 @@ export default function Home() {
   const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
   const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
-  // Altura del contenedor del calendario
-  const calendarContainerHeight = 500;
+  // Usamos un estado para la altura real del contenedor del calendario
+  const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
+
+  // Actualiza la altura del contenedor cuando éste cambie (o al montar)
+  useEffect(() => {
+    const updateContainerHeight = () => {
+      if (containerRef.current) {
+        setCalendarContainerHeight(containerRef.current.clientHeight);
+      }
+    };
+    updateContainerHeight();
+    window.addEventListener("resize", updateContainerHeight);
+    return () => window.removeEventListener("resize", updateContainerHeight);
+  }, [calendarKey]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -283,9 +295,9 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculo del top offset basado en la hora actual
   const minutesSinceMidnight =
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  // Ahora usamos la altura real del contenedor
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
   // Función para recalcular nowLeftOffset y dayColumnWidth
@@ -762,7 +774,7 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Usamos containerRef para asegurar ancho visible */}
+      {/* Contenedor del calendario: se usa containerRef para asegurar el ancho visible */}
       <div
         ref={containerRef}
         className="resizable-calendar-container relative w-full"
@@ -801,7 +813,7 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: Se muestra la línea y el botón si dayColumnWidth > 0 */}
+        {/* Now Marker: se muestra la línea y el botón si dayColumnWidth > 0 */}
         {dayColumnWidth > 0 && (
           <div
             style={{
