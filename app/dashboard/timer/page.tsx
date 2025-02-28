@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
@@ -236,7 +236,6 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({ isOpen, onClose, onSave, 
 
 export default function Home() {
   const calendarRef = useRef<FullCalendar>(null);
-  // Nuevo ref para el contenedor del calendario
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [time, setTime] = useState<number>(0);
@@ -263,32 +262,32 @@ export default function Home() {
   const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
   const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
-  // Estado para scroll vertical y horizontal del contenedor
-  const [scrollTop, setScrollTop] = useState<number>(0);
-  const [scrollLeft, setScrollLeft] = useState<number>(0);
+  // Nuevo estado: posición fija del contenedor en pantalla
+  const [containerRect, setContainerRect] = useState({ top: 0, left: 0 });
 
-  // Usamos un estado para la altura real del contenedor del calendario
+  // Estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
 
-  // Actualiza la altura del contenedor cuando éste cambie (o al montar)
+  // Actualiza la altura y posición del contenedor cuando cambia
   useEffect(() => {
-    const updateContainerHeight = () => {
+    const updateContainerMeasurements = () => {
       if (containerRef.current) {
         setCalendarContainerHeight(containerRef.current.clientHeight);
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerRect({ top: rect.top, left: rect.left });
       }
     };
-    updateContainerHeight();
-    window.addEventListener("resize", updateContainerHeight);
-    return () => window.removeEventListener("resize", updateContainerHeight);
+    updateContainerMeasurements();
+    window.addEventListener("resize", updateContainerMeasurements);
+    return () => window.removeEventListener("resize", updateContainerMeasurements);
   }, [calendarKey]);
 
-  // Actualiza scrollTop y scrollLeft cuando se hace scroll en el contenedor del calendario
+  // Actualiza scroll (aunque ahora usaremos la posición fija del contenedor)
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
       const handleScroll = () => {
-        setScrollTop(container.scrollTop);
-        setScrollLeft(container.scrollLeft);
+        // Aunque ya no usamos scrollTop/Left para la posición, se puede actualizar si se necesita
       };
       container.addEventListener("scroll", handleScroll);
       return () => container.removeEventListener("scroll", handleScroll);
@@ -314,7 +313,7 @@ export default function Home() {
 
   const minutesSinceMidnight =
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  // Calcular nowTopOffset usando la altura del contenedor y restando el scrollTop
+  // Calcular nowTopOffset usando la altura del contenedor (sin restar scroll)
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
   // Función para recalcular nowLeftOffset y dayColumnWidth
@@ -328,11 +327,6 @@ export default function Home() {
       const viewStart = view.activeStart;
       const diffTime = now.getTime() - viewStart.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      console.log("now:", now);
-      console.log("viewStart:", viewStart);
-      console.log("diffDays:", diffDays);
-      console.log("containerWidth:", effectiveWidth, "widthPerDay:", effectiveWidth / 7);
 
       if (diffDays >= 0 && diffDays < 7) {
         const widthPerDay = effectiveWidth / 7;
@@ -828,14 +822,13 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: Ajustado para restar scrollLeft y scrollTop */}
+        {/* Ahora el marcador "now" se posiciona usando la posición fija del contenedor */}
         {dayColumnWidth > 0 && (
           <div
             style={{
-              position: "absolute",
-              top: `${nowTopOffset - scrollTop}px`,
-              // Ahora se resta scrollLeft para compensar el desplazamiento horizontal
-              left: `${nowLeftOffset - scrollLeft}px`,
+              position: "fixed",
+              top: containerRect.top + nowTopOffset,
+              left: containerRect.left + nowLeftOffset,
               width: `${dayColumnWidth}px`,
               pointerEvents: "none",
               zIndex: 1100
