@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
-import type { EventApi } from "@fullcalendar/core";
+import type { EventApi, EventSourceApi } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
@@ -296,13 +296,73 @@ export default function Home() {
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
 
-  // Actualiza "now" cada segundo
+  // Actualiza "now" cada segundo y actualiza el evento "now" en el calendario
   useEffect(() => {
     const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
+      const newNow = new Date();
+      setNow(newNow);
+      
+      // Actualizar el evento "now" en el calendario
+      if (calendarRef.current) {
+        const calendarApi = calendarRef.current.getApi();
+        
+        // Eliminar el evento "now" anterior si existe
+        const existingNowEvent = calendarApi.getEventById('now-marker');
+        if (existingNowEvent) {
+          existingNowEvent.remove();
+        }
+        
+        // Crear un nuevo evento "now" en la hora actual
+        const endTime = new Date(newNow);
+        endTime.setMinutes(endTime.getMinutes() + 30); // El evento dura 30 minutos por defecto
+        
+        calendarApi.addEvent({
+          id: 'now-marker',
+          title: 'NOW',
+          start: newNow,
+          end: endTime,
+          backgroundColor: '#4CAF50',
+          borderColor: '#4CAF50',
+          textColor: '#FFFFFF',
+          editable: false,
+          classNames: ['now-marker-event'],
+          extendedProps: {
+            isNowMarker: true
+          }
+        });
+        
+        // Si estamos en vista de día o semana, desplazar a la hora actual
+        const view = calendarApi.view;
+        if (view.type === 'timeGridDay' || view.type === 'timeGridWeek') {
+          calendarApi.scrollToTime({ hour: newNow.getHours(), minute: newNow.getMinutes() });
+        }
+      }
+    }, 60000); // Actualizar cada minuto
+    
+    // Crear el evento "now" inicial
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const endTime = new Date(now);
+      endTime.setMinutes(endTime.getMinutes() + 30);
+      
+      calendarApi.addEvent({
+        id: 'now-marker',
+        title: 'NOW',
+        start: now,
+        end: endTime,
+        backgroundColor: '#4CAF50',
+        borderColor: '#4CAF50',
+        textColor: '#FFFFFF',
+        editable: false,
+        classNames: ['now-marker-event'],
+        extendedProps: {
+          isNowMarker: true
+        }
+      });
+    }
+    
     return () => clearInterval(interval);
-  }, []);
+  }, [calendarRef.current]);
 
   // Funciones para eliminar, actualizar, crear proyectos y eventos...
   const deleteEvent = async (eventId: string): Promise<void> => {
