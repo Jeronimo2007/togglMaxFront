@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type { EventApi } from "@fullcalendar/core";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -273,11 +273,11 @@ export default function Home() {
       .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Actualizar el estado de "now" cada segundo
+  // Actualizar el estado de "now" cada minuto en vez de cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(new Date());
-    }, 1000);
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -286,8 +286,8 @@ export default function Home() {
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
 
-  // Calcular el left offset y width para la columna del día actual
-  useEffect(() => {
+  // Función que recalcule el left offset y el ancho de la columna del día actual
+  const recalcNowMarker = useCallback(() => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       const view = calendarApi.view;
@@ -314,7 +314,18 @@ export default function Home() {
         setDayColumnWidth(0);
       }
     }
-  }, [now, calendarKey]);
+  }, [now]);
+
+  // Recalcular siempre que cambie now, calendarKey o al redimensionar la ventana
+  useEffect(() => {
+    recalcNowMarker();
+  }, [now, calendarKey, recalcNowMarker]);
+
+  useEffect(() => {
+    const handleResize = () => recalcNowMarker();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [recalcNowMarker]);
 
   // Funciones para borrar, actualizar, crear proyectos y eventos...
   const deleteEvent = async (eventId: string): Promise<void> => {
