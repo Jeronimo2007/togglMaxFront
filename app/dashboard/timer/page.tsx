@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useRef, useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import type { EventApi, DateSelectArg, EventClickArg } from "@fullcalendar/core";
@@ -248,7 +246,7 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({
 };
 
 export default function Home() {
-  // No usamos ResizeObserver; se fija la altura.
+  // Se fija la altura, sin ResizeObserver.
   const calendarRef = useRef<FullCalendar>(null);
 
   const [time, setTime] = useState<number>(0);
@@ -273,8 +271,8 @@ export default function Home() {
   const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
 
-  // Altura fija de 1000px y sin scroll (overflow hidden)
-  const calendarContainerHeight = 1000;
+  // Altura fija de 2000px y sin scroll (overflow hidden)
+  const calendarContainerHeight = 2000;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -654,9 +652,13 @@ export default function Home() {
     setIsNowModalOpen(false);
   };
 
-  // Calcula la posición vertical en base a los minutos transcurridos desde medianoche
+  // Calcula el offset vertical basado en minutos transcurridos desde medianoche
   const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
+  // Calcula el índice del día (asumiendo vista timeGridWeek donde el primer día corresponde a domingo)
+  const dayIndex = now.getDay();
+  // Calcular la posición horizontal: dividir la anchura del calendario en 7 columnas y ubicar el botón en el centro de la columna actual
+  const nowLeftOffset = `${(dayIndex + 0.5) * (100 / 7)}%`;
 
   return (
     <div className="p-6 space-y-6">
@@ -727,7 +729,7 @@ export default function Home() {
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Contenedor del calendario: altura fija de 1000px y sin scroll */}
+      {/* Contenedor del calendario: altura fija de 2000px sin scroll */}
       <div
         className="relative w-full"
         style={{
@@ -765,13 +767,13 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Botón Now: posicionado como overlay sin depender de scroll, con diseño personalizado basado en la imagen dada */}
+        {/* Botón Now: Ubicado en la columna correspondiente al día actual y en el offset vertical calculado*/}
         <div
           style={{
             position: "absolute",
             top: `${nowTopOffset}px`,
-            left: "50%",
-            transform: "translateX(-50%)",
+            left: nowLeftOffset,
+            transform: "translate(-50%, -50%)",
             zIndex: 1200,
             pointerEvents: "auto",
           }}
@@ -785,11 +787,10 @@ export default function Home() {
               borderRadius: "50%",
               border: "none",
               backgroundImage:
-                "url(data:image/png;base64,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)",
+                "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAs8AAAEgCAYAAABLiJ59AAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAtdEVYdENyZWF0aW9uIFRpbWUARnJpIDI4IEZlYiAyMDI1IDA2OjQ1OjA4IFBNIC0wNSKgn0IAAAkSSURBVHic7d0xaFQLFsfhM+sKMqCYQlCGECymMbU2acQuhZBKI9qlUGxsTKPNFmKTSgS7gJ0hVTBCejuDhYXpBJFwMY0gprEJecXb9alx9v0fJJOb+H1d7mTgNIf5zZ07czvdbne7Buj1etU0zaCHgX1kP6Gd7Ca0127s5792aRYAADj0xDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAIQ6/X5/e7+HAACAg6DT7XYHxnOv16umaYY5DxCyn9BOdhPaazf202UbAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQ6vT7/e393sIAAA4CDrdbndgPPd6vWqaZpjzACH7Ce1kN6G9dmM/XbYBAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAChTr/f397vIQAA4CDodLvdgfHc6/WqaZphzgOE7Ce0k92E9tqN/XTZBgAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhP4AHxYts2hUDCoAAAAASUVORK5CYII=)",
               backgroundSize: "cover",
               backgroundRepeat: "no-repeat",
             }}
-            // Quitamos título de accesibilidad interno porque usamos background image
           ></Button>
         </div>
       </div>
