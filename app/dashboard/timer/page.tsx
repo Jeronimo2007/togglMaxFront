@@ -263,6 +263,9 @@ export default function Home() {
   const [nowLeftOffset, setNowLeftOffset] = useState<number>(0);
   const [dayColumnWidth, setDayColumnWidth] = useState<number>(0);
 
+  // Estado para scroll vertical del contenedor
+  const [scrollTop, setScrollTop] = useState<number>(0);
+
   // Usamos un estado para la altura real del contenedor del calendario
   const [calendarContainerHeight, setCalendarContainerHeight] = useState<number>(500);
 
@@ -277,6 +280,18 @@ export default function Home() {
     window.addEventListener("resize", updateContainerHeight);
     return () => window.removeEventListener("resize", updateContainerHeight);
   }, [calendarKey]);
+
+  // Actualiza scrollTop cuando se hace scroll en el contenedor del calendario
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      const handleScroll = () => {
+        setScrollTop(container.scrollTop);
+      };
+      container.addEventListener("scroll", handleScroll);
+      return () => container.removeEventListener("scroll", handleScroll);
+    }
+  }, []);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -297,15 +312,13 @@ export default function Home() {
 
   const minutesSinceMidnight =
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  // Ahora usamos la altura real del contenedor
-  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
+  // Calcular nowTopOffset usando la altura del contenedor y restando el scrollTop
+  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight - scrollTop;
 
   // Función para recalcular nowLeftOffset y dayColumnWidth
   const recalcNowMarker = useCallback(() => {
     if (calendarRef.current && containerRef.current) {
-      // Medir el contenedor a través del ref del div
       const containerWidth = containerRef.current.getBoundingClientRect().width;
-      // Fallback: si no se consigue un ancho, utilizar window.innerWidth
       const effectiveWidth = containerWidth || window.innerWidth;
       
       const calendarApi = calendarRef.current.getApi();
@@ -330,7 +343,6 @@ export default function Home() {
     }
   }, [now]);
 
-  // Recalcular con cambios en now, calendarKey o redimensionamiento
   useEffect(() => {
     recalcNowMarker();
   }, [now, calendarKey, recalcNowMarker]);
@@ -780,7 +792,7 @@ export default function Home() {
         className="resizable-calendar-container relative w-full"
         style={{
           resize: "vertical",
-          overflow: "hidden",
+          overflowY: "auto",
           minHeight: `${calendarContainerHeight}px`
         }}
       >
@@ -813,7 +825,7 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Now Marker: se muestra la línea y el botón si dayColumnWidth > 0 */}
+        {/* Now Marker: Ajustado la posición para restar scrollTop */}
         {dayColumnWidth > 0 && (
           <div
             style={{
