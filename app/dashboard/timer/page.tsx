@@ -819,36 +819,56 @@ export default function Home() {
             if (info.event.id !== "dummy-timer-event") {
               const project = projects.find((p) => p.name === info.event.extendedProps.project);
               const color = project ? project.color : "#999999"; // Color por defecto
-
+          
               info.el.style.backgroundColor = color;
               info.el.style.borderColor = color;
               info.el.style.color = "white"; // Asegurar que el texto sea legible
               return; // Salimos aquí para evitar que se mezcle con el dummy event
             }
-
+          
             // **2️⃣ Modificar SOLO el dummy-timer-event**
             if (info.event.id === "dummy-timer-event") {
+              const container = document.createElement("div");
+              container.className = "absolute flex items-center w-full";
+              container.style.top = "50%"; // Centrar verticalmente
+              container.style.left = "0"; // Asegurar alineación correcta
+              container.style.transform = "translateY(-50%)"; // Ajuste fino
+          
+              // **Botón de inicio del temporizador**
               const button = document.createElement("button");
               button.innerHTML = "▶";
               button.className =
-                "fixed z-50 w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
-
-              // 🚨 Detener propagación para que FullCalendar no lo detecte
+                "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
+              
+              // **🚨 Evitar que FullCalendar reciba el clic**
+              button.addEventListener("mousedown", (event) => {
+                event.stopPropagation(); // Detiene la propagación
+                event.preventDefault(); // Previene comportamientos no deseados
+              });
+          
               button.addEventListener("click", (event) => {
-                event.stopPropagation(); // Detiene la propagación del evento
-                event.preventDefault(); // Evita que el navegador lo procese como un evento de calendario
+                event.stopPropagation();
                 setShowTimerModal(true);
               });
-
-              // **Obtener la posición del evento en la pantalla**
-              const eventRect = info.el.getBoundingClientRect();
-              button.style.left = `${eventRect.left - 10}px`; // Ajuste fino
-              button.style.top = `${eventRect.top + eventRect.height / 2}px`; // Centrado
-
-              // **Agregar botón directamente al `body` para aislarlo de FullCalendar**
-              document.body.appendChild(button);
+          
+              // **Línea visual del botón**
+              const line = document.createElement("div");
+              line.className = "h-[2px] bg-white ml-2 flex-1";
+              line.style.width = "100%";
+          
+              // **Agregar elementos al contenedor**
+              container.appendChild(button);
+              container.appendChild(line);
+          
+              // **Insertar el botón en la celda del evento**
+              const parent = info.el.parentElement;
+              if (parent) {
+                parent.style.position = "relative"; // Asegurar que el botón se posicione bien
+                parent.appendChild(container);
+              }
             }
           }}
+          
 
 
 
