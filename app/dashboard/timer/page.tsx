@@ -283,9 +283,9 @@ export default function Home() {
     try {
       const now = new Date();
       now.setSeconds(0, 0); // Asegurar que sea un tiempo redondeado
-
+  
       const end = new Date(now.getTime() + 60000); // 1 minuto después
-
+  
       const dummy: EventData = {
         id: "dummy-timer-event",
         title: "", // Sin texto visible
@@ -302,13 +302,13 @@ export default function Home() {
           descripcion: "",
         },
       };
-
+  
       setDummyEvent(dummy);
     } catch (error) {
       console.error("Error al actualizar el dummy event:", error);
     }
   };
-
+  
 
   // Efecto para actualizar el dummy event cada minuto
   useEffect(() => {
@@ -815,53 +815,55 @@ export default function Home() {
             return "border-accent text-primary-foreground";
           }}
           eventDidMount={(info) => {
-            // **1️⃣ Aplicar color a los eventos NORMALES según su proyecto**
+            // **1️⃣ Aplicar color a eventos NORMALES**
             if (info.event.id !== "dummy-timer-event") {
               const project = projects.find((p) => p.name === info.event.extendedProps.project);
-              const color = project ? project.color : "#999999"; // Color por defecto si no tiene
-
+              const color = project ? project.color : "#999999"; // Color por defecto
+          
               info.el.style.backgroundColor = color;
               info.el.style.borderColor = color;
               info.el.style.color = "white"; // Asegurar que el texto sea legible
               return; // Salimos aquí para evitar que se mezcle con el dummy event
             }
-
-            // **2️⃣ Modificar SOLO el dummy-timer-event (sin afectar colores de otros eventos)**
+          
+            // **2️⃣ Modificar SOLO el dummy-timer-event**
             if (info.event.id === "dummy-timer-event") {
               const container = document.createElement("div");
-              container.className = "absolute flex items-center w-full";
+              container.className = "absolute flex items-center w-full pointer-events-none"; // 🚨 FullCalendar ignora todo dentro de este div
               container.style.top = "50%"; // Centrar verticalmente
               container.style.transform = "translateY(-50%)"; // Ajuste fino
-
-              // Crear el botón de inicio
+          
+              // **Botón de inicio del temporizador**
               const button = document.createElement("button");
               button.innerHTML = "▶";
               button.className =
-                "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
+                "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800 pointer-events-auto"; // 🚨 Solo el botón recibe clics
+              
               button.addEventListener("click", (event) => {
-                event.stopPropagation(); // Detiene la propagación del evento
-                event.preventDefault(); // Evita que el navegador lo procese como un evento de calendario
+                event.stopPropagation(); // Evita que el clic se propague a FullCalendar
+                event.preventDefault(); // Previene comportamientos no deseados
                 setShowTimerModal(true);
               });
-
-              // Crear la línea que ocupa toda la celda
+          
+              // **Línea visual del botón**
               const line = document.createElement("div");
-              line.className = "h-[2px] bg-white ml-2 flex-1"; // Línea blanca
-              line.style.width = "100%"; // Ocupar toda la celda
-
-              // Agregar botón y línea al contenedor
+              line.className = "h-[2px] bg-white ml-2 flex-1";
+              line.style.width = "100%";
+          
+              // **Agregar elementos al contenedor**
               container.appendChild(button);
               container.appendChild(line);
-
-              // Insertar en el evento
+          
+              // **Insertar el botón en la celda del evento**
               const parent = info.el.parentElement;
               if (parent) {
-                parent.style.position = "relative"; // Asegurar que el botón se posicione bien
+                parent.style.position = "relative";
                 parent.appendChild(container);
               }
             }
           }}
-
+          
+                           
         />
       </div>
       {selectedEvent && selectedEvent.id !== "dummy-timer-event" && (
