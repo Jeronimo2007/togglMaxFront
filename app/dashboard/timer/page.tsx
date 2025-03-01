@@ -14,7 +14,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -44,7 +44,7 @@ interface NewEvent {
   descripcion?: string;
 }
 
-interface Event {
+interface EventData {
   id: string;
   title: string;
   start: string;
@@ -70,7 +70,7 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
-// Modal para agregar evento
+// Modal para agregar evento manual (ya existente)
 const AddEventModal: React.FC<AddEventModalProps> = ({
   isOpen,
   onClose,
@@ -108,7 +108,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
                     setNewEvent({
                       ...newEvent!,
                       start: date,
-                      end: newEvent?.end || new Date(date.getTime() + 3600000),
+                      end:
+                        newEvent?.end ||
+                        new Date(date.getTime() + 3600000),
                     });
                   }
                 }}
@@ -157,7 +159,10 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
               <Textarea
                 value={newEvent?.descripcion}
                 onChange={(e) =>
-                  setNewEvent({ ...newEvent!, descripcion: e.target.value })
+                  setNewEvent({
+                    ...newEvent!,
+                    descripcion: e.target.value,
+                  })
                 }
               />
             </div>
@@ -174,37 +179,42 @@ const AddEventModal: React.FC<AddEventModalProps> = ({
   );
 };
 
-// Modal para iniciar el timer desde el marcador "Now"
-interface NowTimerModalProps {
+// Modal para iniciar el temporizador desde el dummy event
+interface TimerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (project: string, description: string) => void;
+  onSave: () => void;
   projects: Project[];
+  selectedProject: string;
+  setSelectedProject: (project: string) => void;
+  taskDescription: string;
+  setTaskDescription: (desc: string) => void;
 }
 
-const NowTimerModal: React.FC<NowTimerModalProps> = ({
+const TimerEventModal: React.FC<TimerModalProps> = ({
   isOpen,
   onClose,
   onSave,
   projects,
+  selectedProject,
+  setSelectedProject,
+  taskDescription,
+  setTaskDescription,
 }) => {
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-
   return (
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md max-h-[85vh] overflow-y-auto z-[49]">
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
           <Dialog.Title className="text-lg font-bold mb-4">
-            Iniciar Timer Ahora
+            Iniciar Temporizador
           </Dialog.Title>
           <div className="space-y-4">
             <div>
               <Label>Proyecto</Label>
               <Select
                 value={selectedProject}
-                onValueChange={(value) => setSelectedProject(value)}
+                onValueChange={setSelectedProject}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un proyecto" />
@@ -221,24 +231,16 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({
             <div>
               <Label>Descripción</Label>
               <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Agrega una descripción"
+                value={taskDescription}
+                onChange={(e) => setTaskDescription(e.target.value)}
+                placeholder="Describe tu tarea..."
               />
             </div>
             <div className="flex justify-end space-x-2">
               <Dialog.Close asChild>
                 <Button variant="outline">Cancelar</Button>
               </Dialog.Close>
-              <Button
-                onClick={() => {
-                  onSave(selectedProject, description);
-                  setSelectedProject("");
-                  setDescription("");
-                }}
-              >
-                Guardar y Empezar
-              </Button>
+              <Button onClick={onSave}>Guardar y Empezar</Button>
             </div>
           </div>
         </Dialog.Content>
@@ -248,69 +250,15 @@ const NowTimerModal: React.FC<NowTimerModalProps> = ({
 };
 
 export default function Home() {
-  // Se fija la altura, sin ResizeObserver.
+  // Referencia del calendario
   const calendarRef = useRef<FullCalendar>(null);
-
-  // Estado para forzar la actualización del botón "Now" cada segundo
-  const [now, setNow] = useState(new Date());
-
-  // Efecto para actualizar el botón "Now" cada segundo
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Calcular la posición vertical del botón "Now"
-  const minutesSinceMidnight =
-    now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  // Obtener la referencia del calendario
-  const calendarApi = calendarRef.current?.getApi();
-
-  // Obtener la hora actual en minutos desde medianoche
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-  // Obtener la altura de cada celda en el calendario
-  const calendarTimeAxis = document.querySelector(".fc-timegrid-slot-label-frame");
-  const slotHeight = calendarTimeAxis ? calendarTimeAxis.clientHeight : 40; // Altura de cada celda en px
-
-  // Calcular el offset exacto en píxeles basado en la hora actual
-  const nowTopOffset = nowMinutes * (slotHeight / 60);
-
-
-  // Obtener la vista actual del calendario
-  const currentView = calendarRef.current?.getApi().view.type;
-  const startDate = calendarRef.current?.getApi().view.currentStart;
-  const endDate = calendarRef.current?.getApi().view.currentEnd;
-
-  let nowLeftOffset = "50%"; // Posición por defecto en vista diaria
-
-  if (currentView === "timeGridWeek" && startDate && endDate) {
-    // Calcular la posición en la vista semanal
-    const daysInView = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-    const todayIndex = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
-    nowLeftOffset = `${(todayIndex / daysInView) * 100}%`;
-  }
-
-  // Función para mover el calendario a la hora actual
-  const handleNowMarkerClick = () => {
-    if (calendarRef.current) {
-      const hours = now.getHours();
-      const minutes = now.getMinutes();
-      const seconds = now.getSeconds();
-
-      calendarRef.current.getApi().scrollToTime({ hours, minutes, seconds });
-    }
-  };
 
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [taskDescription, setTaskDescription] = useState<string>("");
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventData[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [newEvent, setNewEvent] = useState<NewEvent | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -323,14 +271,229 @@ export default function Home() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
-  // Estado para el marcador "Now" que se actualiza cada segundo
-  const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
+  // Nuevo estado para el dummy event y modal de temporizador
+  const [dummyEvent, setDummyEvent] = useState<EventData | null>(null);
+  const [showTimerModal, setShowTimerModal] = useState<boolean>(false);
 
-
-  // Altura fija de 2000px y sin scroll (overflow hidden)
+  // Altura fija del calendario
   const calendarContainerHeight = 1500;
 
+  // Función para actualizar el dummy event usando el endpoint /event/tiempo_actual
+  const updateDummyEvent = async (): Promise<void> => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/tiempo_actual`
+      );
+      const data = await response.json();
+      if (data.status === "success" && data.hora_actual) {
+        const start = new Date(data.hora_actual);
+        const end = new Date(start.getTime() + 60000); // duración de 1 minuto
+        const dummy: EventData = {
+          id: "dummy-timer-event",
+          title: "", // sin información visible
+          start: start.toISOString(),
+          end: end.toISOString(),
+          display: "block",
+          allDay: false,
+          editable: false,
+          durationEditable: false,
+          eventResizableFromStart: false,
+          extendedProps: {
+            project: "",
+            duracion: "",
+            descripcion: "",
+          },
+        };
+        setDummyEvent(dummy);
+      }
+    } catch (error) {
+      console.error("Error al actualizar el dummy event:", error);
+    }
+  };
 
+  // Efecto para actualizar el dummy event cada minuto
+  useEffect(() => {
+    updateDummyEvent(); // actualización inicial
+    const interval = setInterval(() => {
+      updateDummyEvent();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Efecto para cargar proyectos y eventos al cargar la página y al cambiar el foco/visibilidad
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchEvents();
+      }
+    };
+    const handleFocus = () => {
+      fetchEvents();
+    };
+    fetchProjects();
+    fetchEvents();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
+
+  // Temporizador
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRunning) {
+      interval = setInterval(() => {
+        setTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning]);
+
+  const handleDateClick = (info: DateClickArg): void => {
+    const clickedDate = new Date(info.date);
+    const end = new Date(clickedDate);
+    end.setHours(end.getHours() + 1);
+    setNewEvent({
+      start: clickedDate,
+      end: end,
+      project: "",
+      descripcion: "",
+    });
+  };
+
+  const handleSelect = (info: DateSelectArg): void => {
+    setNewEvent({
+      start: info.start,
+      end: info.end,
+      project: "",
+      descripcion: "",
+    });
+  };
+
+  const saveNewEvent = async (): Promise<void> => {
+    if (!newEvent?.project) {
+      alert("Por favor, selecciona un proyecto");
+      return;
+    }
+    if (newEvent.end <= newEvent.start) {
+      alert("La fecha de fin debe ser posterior a la fecha de inicio");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/manual/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            project: newEvent.project,
+            descripcion: newEvent.descripcion || "",
+            fecha_inicio: newEvent.start.toISOString(),
+            fecha_fin: newEvent.end.toISOString(),
+          }),
+        }
+      );
+      if (response.ok) {
+        setNewEvent(null);
+        fetchEvents();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al guardar el evento");
+      }
+    } catch (error) {
+      console.error("Error al guardar el evento:", error);
+      alert("Error de conexión al servidor");
+    }
+  };
+
+  const saveTimerEvent = async (): Promise<void> => {
+    if (!selectedProject) {
+      alert("Por favor, selecciona un proyecto");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            project: selectedProject,
+            descripcion: taskDescription || "",
+            duracion: time,
+          }),
+        }
+      );
+      if (response.ok) {
+        setTime(0);
+        setIsRunning(false);
+        setTaskDescription("");
+        fetchEvents();
+      } else {
+        alert("Error al guardar el evento");
+      }
+    } catch (error) {
+      console.error("Error al guardar el evento:", error);
+      alert("Error de conexión al servidor");
+    }
+  };
+
+  const updateEventDates = async (info: any) => {
+    try {
+      const eventId = info.event.id;
+      const newStart: Date = info.event.start;
+      const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/${eventId}/dates`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            fecha_inicio: newStart.toISOString(),
+            fecha_fin: newEnd.toISOString(),
+          }),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(errorData.detail || "Error al actualizar las fechas del evento");
+        info.revert();
+      }
+    } catch (error) {
+      console.error("Error al actualizar fechas del evento:", error);
+      alert("Error de conexión al servidor al actualizar fechas");
+      info.revert();
+    }
+  };
+
+  const handleEventDrop = async (info: any) => {
+    await updateEventDates(info);
+  };
+
+  const handleEventResize = async (info: any) => {
+    await updateEventDates(info);
+  };
+
+  // Modificar el comportamiento al hacer click en un evento:
+  // Si es el dummy event, abrir el TimerEventModal.
+  const handleEventClick = (info: EventClickArg): void => {
+    if (info.event.id === "dummy-timer-event") {
+      setShowTimerModal(true);
+    } else {
+      setSelectedEvent(info.event);
+    }
+  };
 
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
@@ -364,9 +527,11 @@ export default function Home() {
   };
 
   const deleteProject = async (projectName: string): Promise<void> => {
-    if (!confirm(
-      `¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`
-    )) {
+    if (
+      !confirm(
+        `¿Estás seguro de que deseas eliminar el proyecto "${projectName}" y todos sus eventos?`
+      )
+    ) {
       return;
     }
     try {
@@ -529,179 +694,17 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchEvents();
-      }
-    };
-    const handleFocus = () => {
-      fetchEvents();
-    };
-    fetchProjects();
-    fetchEvents();
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, []);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRunning) {
-      interval = setInterval(() => {
-        setTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isRunning]);
-
-  const handleDateClick = (info: DateClickArg): void => {
-    const clickedDate = new Date(info.date);
-    const end = new Date(clickedDate);
-    end.setHours(end.getHours() + 1);
-    setNewEvent({
-      start: clickedDate,
-      end: end,
-      project: "",
-      descripcion: "",
-    });
-  };
-
-  const handleSelect = (info: DateSelectArg): void => {
-    setNewEvent({
-      start: info.start,
-      end: info.end,
-      project: "",
-      descripcion: "",
-    });
-  };
-
-  const saveNewEvent = async (): Promise<void> => {
-    if (!newEvent?.project) {
-      alert("Por favor, selecciona un proyecto");
-      return;
-    }
-    if (newEvent.end <= newEvent.start) {
-      alert("La fecha de fin debe ser posterior a la fecha de inicio");
-      return;
-    }
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/manual/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            project: newEvent.project,
-            descripcion: newEvent.descripcion || "",
-            fecha_inicio: newEvent.start.toISOString(),
-            fecha_fin: newEvent.end.toISOString(),
-          }),
-        }
-      );
-      if (response.ok) {
-        setNewEvent(null);
-        fetchEvents();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || "Error al guardar el evento");
-      }
-    } catch (error) {
-      console.error("Error al guardar el evento:", error);
-      alert("Error de conexión al servidor");
-    }
-  };
-
-  const saveTimerEvent = async (): Promise<void> => {
+  // Manejador para guardar desde el TimerEventModal: iniciar el temporizador automáticamente
+  const handleTimerModalSave = () => {
     if (!selectedProject) {
       alert("Por favor, selecciona un proyecto");
       return;
     }
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/eventos/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            project: selectedProject,
-            descripcion: taskDescription || "",
-            duracion: time,
-          }),
-        }
-      );
-      if (response.ok) {
-        setTime(0);
-        setIsRunning(false);
-        setTaskDescription("");
-        fetchEvents();
-      } else {
-        alert("Error al guardar el evento");
-      }
-    } catch (error) {
-      console.error("Error al guardar el evento:", error);
-      alert("Error de conexión al servidor");
-    }
-  };
-
-  const updateEventDates = async (info: any) => {
-    try {
-      const eventId = info.event.id;
-      const newStart: Date = info.event.start;
-      const newEnd: Date = info.event.end || new Date(newStart.getTime() + 3600000);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/${eventId}/dates`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            fecha_inicio: newStart.toISOString(),
-            fecha_fin: newEnd.toISOString(),
-          }),
-        }
-      );
-      if (!response.ok) {
-        const errorData = await response.json();
-        alert(errorData.detail || "Error al actualizar las fechas del evento");
-        info.revert();
-      }
-    } catch (error) {
-      console.error("Error al actualizar fechas del evento:", error);
-      alert("Error de conexión al servidor al actualizar fechas");
-      info.revert();
-    }
-  };
-
-  const handleEventDrop = async (info: any) => {
-    await updateEventDates(info);
-  };
-
-  const handleEventResize = async (info: any) => {
-    await updateEventDates(info);
-  };
-
-
-  const handleNowModalSave = (project: string, description: string) => {
-    setSelectedProject(project);
-    setTaskDescription(description);
+    // Reiniciar el temporizador y comenzar a contar
+    setTime(0);
     setIsRunning(true);
-    setIsNowModalOpen(false);
+    setShowTimerModal(false);
   };
-
-
-
 
   return (
     <div className="p-6 space-y-6">
@@ -709,8 +712,12 @@ export default function Home() {
         <h2 className="text-lg font-bold">Temporizador</h2>
         <span className="text-2xl">
           {(() => {
-            const hours = Math.floor(time / 3600).toString().padStart(2, "0");
-            const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, "0");
+            const hours = Math.floor(time / 3600)
+              .toString()
+              .padStart(2, "0");
+            const minutes = Math.floor((time % 3600) / 60)
+              .toString()
+              .padStart(2, "0");
             const secs = (time % 60).toString().padStart(2, "0");
             return `${hours}:${minutes}:${secs}`;
           })()}
@@ -719,7 +726,7 @@ export default function Home() {
           <Button onClick={() => setIsRunning((prev) => !prev)}>
             {isRunning ? "Pause" : "Start"}
           </Button>
-          <Button onClick={saveTimerEvent}>Stop & Save</Button>
+          <Button onClick={saveTimerEvent}>Stop &amp; Save</Button>
           <Button onClick={() => setTime(0)}>Reset Time</Button>
         </div>
         <div className="mt-4">
@@ -747,7 +754,9 @@ export default function Home() {
             </Button>
             <Button
               onClick={() => {
-                const proj = projects.find((p) => p.name === selectedProject);
+                const proj = projects.find(
+                  (p) => p.name === selectedProject
+                );
                 setUpdateProjectColor(proj?.color || "#aa69b9");
                 setUpdateProjectRate(0);
                 setIsUpdateProjectModalOpen(true);
@@ -768,17 +777,17 @@ export default function Home() {
             onChange={(e) => setTaskDescription(e.target.value)}
           />
         </div>
-        <Button onClick={() => setIsProjectModalOpen(true)} className="w-full mt-4">
+        <Button
+          onClick={() => setIsProjectModalOpen(true)}
+          className="w-full mt-4"
+        >
           Crear Nuevo Proyecto
         </Button>
       </div>
-      {/* Contenedor del calendario: altura fija de 2000px sin scroll */}
+      {/* Contenedor del calendario: altura fija de 1500px sin scroll */}
       <div
         className="relative w-full"
-        style={{
-          overflow: "hidden",
-          height: `${calendarContainerHeight}px`
-        }}
+        style={{ overflow: "hidden", height: `${calendarContainerHeight}px` }}
       >
         <FullCalendar
           key={calendarKey}
@@ -794,71 +803,37 @@ export default function Home() {
           editable={true}
           selectable
           select={handleSelect}
-          events={events}
+          // Combina los eventos del backend con el dummy event
+          events={dummyEvent ? [...events, dummyEvent] : events}
           dateClick={handleDateClick}
-          eventClick={(info: EventClickArg) => setSelectedEvent(info.event)}
+          eventClick={handleEventClick}
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
           eventClassNames={({ event }) => {
-            const project = projects.find((p) => p.name === event.extendedProps.project);
+            const project = projects.find(
+              (p) => p.name === event.extendedProps.project
+            );
             return project ? "border-accent text-primary-foreground" : "";
           }}
           eventDidMount={(info) => {
-            const project = projects.find((p) => p.name === info.event.extendedProps.project);
+            const project = projects.find(
+              (p) => p.name === info.event.extendedProps.project
+            );
             const color = project ? project.color : "#999999";
             info.el.style.backgroundColor = color;
             info.el.style.borderColor = color;
           }}
         />
-        {/* Botón estilo "Now" con línea horizontal */}
-        <div
-          style={{
-            position: "absolute",
-            top: `${nowTopOffset}px`,
-            left: nowLeftOffset,
-            display: "flex",
-            alignItems: "center",
-            zIndex: 1200,
-          }}
-        >
-          {/* Círculo con icono de play */}
-          <div
-            onClick={handleNowMarkerClick}
-            style={{
-              width: "20px",
-              height: "20px",
-              backgroundColor: "white",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              border: "2px solid black",
-            }}
-          >
-            ▶
-          </div>
-
-          {/* Línea horizontal */}
-          <div
-            style={{
-              width: "100px", // Puedes ajustar el largo de la línea
-              height: "2px",
-              backgroundColor: "white",
-              marginLeft: "5px",
-            }}
-          ></div>
-        </div>
-
       </div>
-      {selectedEvent && (
+      {selectedEvent && selectedEvent.id !== "dummy-timer-event" && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
           <h2 className="text-lg font-bold">Detalles del Evento</h2>
           <p>
             <strong>Proyecto:</strong> {selectedEvent.extendedProps?.project}
           </p>
           <p>
-            <strong>Duración:</strong> {selectedEvent.extendedProps?.duracion}
+            <strong>Duración:</strong>{" "}
+            {selectedEvent.extendedProps?.duracion}
           </p>
           <p>
             <strong>Descripción:</strong>{" "}
@@ -875,7 +850,10 @@ export default function Home() {
           </div>
         </div>
       )}
-      <Dialog.Root open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
+      <Dialog.Root
+        open={isProjectModalOpen}
+        onOpenChange={setIsProjectModalOpen}
+      >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
           <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
@@ -909,7 +887,10 @@ export default function Home() {
                 />
               </div>
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsProjectModalOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsProjectModalOpen(false)}
+                >
                   Cancelar
                 </Button>
                 <Button onClick={createProject} disabled={isCreatingProject}>
@@ -920,7 +901,10 @@ export default function Home() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-      <Dialog.Root open={isUpdateProjectModalOpen} onOpenChange={setIsUpdateProjectModalOpen}>
+      <Dialog.Root
+        open={isUpdateProjectModalOpen}
+        onOpenChange={setIsUpdateProjectModalOpen}
+      >
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-[48]" />
           <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black rounded-lg p-6 w-[95vw] max-w-md z-[49]">
@@ -963,11 +947,15 @@ export default function Home() {
         onSave={saveNewEvent}
         projects={projects}
       />
-      <NowTimerModal
-        isOpen={isNowModalOpen}
-        onClose={() => setIsNowModalOpen(false)}
-        onSave={handleNowModalSave}
+      <TimerEventModal
+        isOpen={showTimerModal}
+        onClose={() => setShowTimerModal(false)}
+        onSave={handleTimerModalSave}
         projects={projects}
+        selectedProject={selectedProject}
+        setSelectedProject={setSelectedProject}
+        taskDescription={taskDescription}
+        setTaskDescription={setTaskDescription}
       />
     </div>
   );
