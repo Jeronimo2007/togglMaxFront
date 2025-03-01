@@ -266,7 +266,19 @@ export default function Home() {
   // Calcular la posición vertical del botón "Now"
   const minutesSinceMidnight =
     now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  const nowTopOffset = (minutesSinceMidnight / 1440) * 800; // Ajusta este valor si es necesario
+  // Obtener la referencia del calendario
+  const calendarApi = calendarRef.current?.getApi();
+
+  // Obtener la hora actual en minutos desde medianoche
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  // Obtener la altura de cada celda en el calendario
+  const calendarTimeAxis = document.querySelector(".fc-timegrid-slot-label-frame");
+  const slotHeight = calendarTimeAxis ? calendarTimeAxis.clientHeight : 40; // Altura de cada celda en px
+
+  // Calcular el offset exacto en píxeles basado en la hora actual
+  const nowTopOffset = nowMinutes * (slotHeight / 60);
+
 
   // Obtener la vista actual del calendario
   const currentView = calendarRef.current?.getApi().view.type;
@@ -288,7 +300,7 @@ export default function Home() {
       const hours = now.getHours();
       const minutes = now.getMinutes();
       const seconds = now.getSeconds();
-      
+
       calendarRef.current.getApi().scrollToTime({ hours, minutes, seconds });
     }
   };
@@ -689,7 +701,7 @@ export default function Home() {
   };
 
 
-  
+
 
   return (
     <div className="p-6 space-y-6">
@@ -798,25 +810,46 @@ export default function Home() {
             info.el.style.borderColor = color;
           }}
         />
-        {/* Botón Now: Ubicado en la columna correspondiente al día actual y en el offset vertical calculado*/}
+        {/* Botón estilo "Now" con línea horizontal */}
         <div
           style={{
             position: "absolute",
             top: `${nowTopOffset}px`,
             left: nowLeftOffset,
-            transform: "translate(-50%, -50%)",
+            display: "flex",
+            alignItems: "center",
             zIndex: 1200,
-            pointerEvents: "auto",
           }}
         >
-          <Button
+          {/* Círculo con icono de play */}
+          <div
             onClick={handleNowMarkerClick}
-            title="Ir a la hora actual"
-            className="w-[80px] h-[40px] bg-red-500 text-white rounded-md font-bold shadow-md hover:bg-red-600 transition duration-300 ease-in-out"
+            style={{
+              width: "20px",
+              height: "20px",
+              backgroundColor: "white",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              border: "2px solid black",
+            }}
           >
-            NOW
-          </Button>
+            ▶
+          </div>
+
+          {/* Línea horizontal */}
+          <div
+            style={{
+              width: "100px", // Puedes ajustar el largo de la línea
+              height: "2px",
+              backgroundColor: "white",
+              marginLeft: "5px",
+            }}
+          ></div>
         </div>
+
       </div>
       {selectedEvent && (
         <div className="p-6 bg-black rounded-lg shadow-lg mt-6">
