@@ -815,6 +815,20 @@ export default function Home() {
             return "border-accent text-primary-foreground";
           }}
           eventDidMount={(info) => {
+            // Encontrar el proyecto asociado al evento
+            const project = projects.find(
+              (p) => p.name === info.event.extendedProps.project
+            );
+            const color = project ? project.color : "#999999"; // Color por defecto si no tiene
+          
+            // Aplicar color al evento real
+            if (info.event.id !== "dummy-timer-event") {
+              info.el.style.backgroundColor = color;
+              info.el.style.borderColor = color;
+              info.el.style.color = "white"; // Asegurar que el texto sea legible
+            }
+          
+            // Si es el botón rápido, lo agregamos pero SIN tocar el color de los eventos
             if (info.event.id === "dummy-timer-event") {
               const container = document.createElement("div");
               container.className = "absolute flex items-center";
@@ -824,11 +838,11 @@ export default function Home() {
               button.innerHTML = "▶";
               button.className =
                 "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
-              button.onclick = () => setShowTimerModal(true); // Abre el modal del temporizador
+              button.onclick = () => setShowTimerModal(true);
           
-              // Crear la línea
+              // Crear la línea blanca
               const line = document.createElement("div");
-              line.className = "h-[2px] w-16 bg-white ml-2"; // Línea blanca de 16px de ancho
+              line.className = "h-[2px] w-16 ml-2 bg-white";
           
               // Agregar botón y línea al contenedor
               container.appendChild(button);
@@ -840,8 +854,7 @@ export default function Home() {
                 parent.appendChild(container);
               }
             }
-          }}
-          
+          }}                    
         />
       </div>
       {selectedEvent && selectedEvent.id !== "dummy-timer-event" && (
