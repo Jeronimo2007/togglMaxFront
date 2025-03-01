@@ -70,7 +70,7 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
-// Modal para agregar evento manual
+// Modal para agregar evento manual (ya existente)
 const AddEventModal: React.FC<AddEventModalProps> = ({
   isOpen,
   onClose,
@@ -281,37 +281,34 @@ export default function Home() {
   // Función para actualizar el dummy event usando el endpoint /event/tiempo_actual
   const updateDummyEvent = async (): Promise<void> => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/event/tiempo_actual`
-      );
-      const data = await response.json();
-      if (data.status === "success" && data.hora_actual) {
-        // Convertir la hora UTC obtenida a la hora local
-        const startUtc = new Date(data.hora_actual);
-        const start = new Date(startUtc.getTime() + startUtc.getTimezoneOffset() * 60000);
-        const end = new Date(start.getTime() + 60000); // duración de 1 minuto
-        const dummy: EventData = {
-          id: "dummy-timer-event",
-          title: "", // sin información visible, usaremos una renderización custom
-          start: start.toISOString(),
-          end: end.toISOString(),
-          display: "block",
-          allDay: false,
-          editable: false,
-          durationEditable: false,
-          eventResizableFromStart: false,
-          extendedProps: {
-            project: "",
-            duracion: "",
-            descripcion: "",
-          },
-        };
-        setDummyEvent(dummy);
-      }
+      const now = new Date();
+      now.setSeconds(0, 0); // Asegurar que sea un tiempo redondeado
+  
+      const end = new Date(now.getTime() + 60000); // 1 minuto después
+  
+      const dummy: EventData = {
+        id: "dummy-timer-event",
+        title: "", // Sin texto visible
+        start: now.toISOString(),
+        end: end.toISOString(),
+        display: "block",
+        allDay: false,
+        editable: false,
+        durationEditable: false,
+        eventResizableFromStart: false,
+        extendedProps: {
+          project: "",
+          duracion: "",
+          descripcion: "",
+        },
+      };
+  
+      setDummyEvent(dummy);
     } catch (error) {
       console.error("Error al actualizar el dummy event:", error);
     }
   };
+  
 
   // Efecto para actualizar el dummy event cada minuto
   useEffect(() => {
@@ -487,7 +484,7 @@ export default function Home() {
     await updateEventDates(info);
   };
 
-  // Modificar comportamiento al hacer click en un evento:
+  // Modificar el comportamiento al hacer click en un evento:
   // Si es el dummy event, abrir el TimerEventModal.
   const handleEventClick = (info: EventClickArg): void => {
     if (info.event.id === "dummy-timer-event") {
@@ -805,54 +802,31 @@ export default function Home() {
           editable={true}
           selectable
           select={handleSelect}
-          // Combinar eventos del backend con el dummy event
+          // Combina los eventos del backend con el dummy event
           events={dummyEvent ? [...events, dummyEvent] : events}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
-          // Renderizado custom para el dummy event usando el estilo indicado (imagen base64)
-          eventContent={(arg) => {
-            if (arg.event.id === "dummy-timer-event") {
-              return (
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#333",
-                  border: "1px solid #666",
-                  borderRadius: "4px",
-                  padding: "4px",
-                  color: "#fff",
-                  fontWeight: "bold"
-                }}>
-                  <img 
-                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAs8AAAEgCAYAAABLiJ59AAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAtdEVYdENyZWF0aW9uIFRpbWUAU2F0IDAxIE1hciAyMDI1IDExOjEwOjE5IEFNIC0wNbubH/sAAAj8SURBVHic7d0xaBRtHsfxZ84TZCHBFII6hGCxjaljk0bsUgipNIJdCsXGxjTaXCE2ViLYBewMqYIW6YUUBgvBpBNEwmgaQbCxCXvFe7ynSbz398rt7mT9fLpMMsy/edhvZp+drTqdTq/0UV3XpWmafl4C+AXWJrSX9Qnt9Y9hDwAAAEeFeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAUNXtdvv6qDoAABgVlec8w+/J2oT2sj6hvWzbAACAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAUNXtdnvDHgIAAI6CqtPp9DWe67ouTdP08xLAL7A2ob2sT2gv2zYAACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAg9G+BQRSWrcZNRwAAAABJRU5ErkJggg==" 
-                    alt="Timer Icon" 
-                    style={{width: "30px", height: "30px", marginBottom: "4px"}}
-                  />
-                  <span>Iniciar Temporizador</span>
-                </div>
-              );
-            }
-            return null;
-          }}
           eventClassNames={({ event }) => {
-            const project = projects.find(
-              (p) => p.name === event.extendedProps.project
-            );
-            return project ? "border-accent text-primary-foreground" : "";
+            if (event.id === "dummy-timer-event") {
+              return "hidden"; // Ocultamos el evento real
+            }
+            return "border-accent text-primary-foreground";
           }}
           eventDidMount={(info) => {
-            // Apply default styling for non-dummy events
-            if (info.event.id !== "dummy-timer-event") {
-              const project = projects.find(
-                (p) => p.name === info.event.extendedProps.project
-              );
-              const color = project ? project.color : "#999999";
-              info.el.style.backgroundColor = color;
-              info.el.style.borderColor = color;
+            if (info.event.id === "dummy-timer-event") {
+              const button = document.createElement("button");
+              button.innerHTML = "▶"; // Icono de "Play"
+              button.className =
+                "absolute w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md transition hover:bg-blue-700";
+              button.onclick = () => setShowTimerModal(true); // Abre el modal del temporizador
+          
+              // Posicionar el botón dentro del evento en el calendario
+              const parent = info.el.parentElement;
+              if (parent) {
+                parent.appendChild(button);
+              }
             }
           }}
         />
