@@ -838,7 +838,10 @@ export default function Home() {
               button.innerHTML = "▶";
               button.className =
                 "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
-              button.onclick = () => setShowTimerModal(true);
+                button.onclick = (event) => {
+                  event.stopPropagation(); // 🚨 **Evita que el clic llegue a FullCalendar**
+                  setShowTimerModal(true);
+                };
           
               // Crear la línea que ocupa toda la celda
               const line = document.createElement("div");
