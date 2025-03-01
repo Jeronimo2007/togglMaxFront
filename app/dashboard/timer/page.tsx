@@ -816,19 +816,32 @@ export default function Home() {
           }}
           eventDidMount={(info) => {
             if (info.event.id === "dummy-timer-event") {
+              const container = document.createElement("div");
+              container.className = "absolute flex items-center";
+          
+              // Crear el botón redondo
               const button = document.createElement("button");
-              button.innerHTML = "▶"; // Icono de "Play"
+              button.innerHTML = "▶";
               button.className =
-                "absolute w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-md transition hover:bg-blue-700";
+                "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
               button.onclick = () => setShowTimerModal(true); // Abre el modal del temporizador
           
-              // Posicionar el botón dentro del evento en el calendario
+              // Crear la línea
+              const line = document.createElement("div");
+              line.className = "h-[2px] w-16 bg-white ml-2"; // Línea blanca de 16px de ancho
+          
+              // Agregar botón y línea al contenedor
+              container.appendChild(button);
+              container.appendChild(line);
+          
+              // Insertar en el evento
               const parent = info.el.parentElement;
               if (parent) {
-                parent.appendChild(button);
+                parent.appendChild(container);
               }
             }
           }}
+          
         />
       </div>
       {selectedEvent && selectedEvent.id !== "dummy-timer-event" && (
