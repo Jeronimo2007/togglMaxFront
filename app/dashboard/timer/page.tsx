@@ -822,27 +822,23 @@ export default function Home() {
             const color = project ? project.color : "#999999"; // Color por defecto si no tiene
           
             // Aplicar color al evento real
-            if (info.event.id !== "dummy-timer-event") {
-              info.el.style.backgroundColor = color;
-              info.el.style.borderColor = color;
-              info.el.style.color = "white"; // Asegurar que el texto sea legible
-            }
-          
-            // Si es el botón rápido, lo agregamos pero SIN tocar el color de los eventos
             if (info.event.id === "dummy-timer-event") {
               const container = document.createElement("div");
-              container.className = "absolute flex items-center";
+              container.className = "absolute flex items-center w-full";
+              container.style.top = "50%"; // Centrar verticalmente
+              container.style.transform = "translateY(-50%)"; // Ajuste fino
           
-              // Crear el botón redondo
+              // Crear el botón de inicio
               const button = document.createElement("button");
               button.innerHTML = "▶";
               button.className =
                 "w-6 h-6 rounded-full border border-white bg-black text-white flex items-center justify-center shadow-md transition hover:bg-gray-800";
               button.onclick = () => setShowTimerModal(true);
           
-              // Crear la línea blanca
+              // Crear la línea que ocupa toda la celda
               const line = document.createElement("div");
-              line.className = "h-[2px] w-16 ml-2 bg-white";
+              line.className = "h-[2px] bg-white ml-2 flex-1"; // Línea blanca
+              line.style.width = "100%"; // Ocupar toda la celda
           
               // Agregar botón y línea al contenedor
               container.appendChild(button);
@@ -851,6 +847,7 @@ export default function Home() {
               // Insertar en el evento
               const parent = info.el.parentElement;
               if (parent) {
+                parent.style.position = "relative"; // Asegurar que el botón se posicione bien
                 parent.appendChild(container);
               }
             }
