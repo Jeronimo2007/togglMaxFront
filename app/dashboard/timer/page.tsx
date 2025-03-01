@@ -251,6 +251,48 @@ export default function Home() {
   // Se fija la altura, sin ResizeObserver.
   const calendarRef = useRef<FullCalendar>(null);
 
+  // Estado para forzar la actualización del botón "Now" cada segundo
+  const [now, setNow] = useState(new Date());
+
+  // Efecto para actualizar el botón "Now" cada segundo
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calcular la posición vertical del botón "Now"
+  const minutesSinceMidnight =
+    now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  const nowTopOffset = (minutesSinceMidnight / 1440) * 800; // Ajusta este valor si es necesario
+
+  // Obtener la vista actual del calendario
+  const currentView = calendarRef.current?.getApi().view.type;
+  const startDate = calendarRef.current?.getApi().view.currentStart;
+  const endDate = calendarRef.current?.getApi().view.currentEnd;
+
+  let nowLeftOffset = "50%"; // Posición por defecto en vista diaria
+
+  if (currentView === "timeGridWeek" && startDate && endDate) {
+    // Calcular la posición en la vista semanal
+    const daysInView = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    const todayIndex = (now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    nowLeftOffset = `${(todayIndex / daysInView) * 100}%`;
+  }
+
+  // Función para mover el calendario a la hora actual
+  const handleNowMarkerClick = () => {
+    if (calendarRef.current) {
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      
+      calendarRef.current.getApi().scrollToTime({ hours, minutes, seconds });
+    }
+  };
+
   const [time, setTime] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -270,18 +312,13 @@ export default function Home() {
   const [calendarKey, setCalendarKey] = useState<number>(Date.now());
 
   // Estado para el marcador "Now" que se actualiza cada segundo
-  const [now, setNow] = useState<Date>(new Date());
   const [isNowModalOpen, setIsNowModalOpen] = useState<boolean>(false);
 
-  // Altura fija de 2000px y sin scroll (overflow hidden)
-  const calendarContainerHeight = 2000;
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Altura fija de 2000px y sin scroll (overflow hidden)
+  const calendarContainerHeight = 1500;
+
+
 
   const deleteEvent = async (eventId: string): Promise<void> => {
     if (!eventId) {
@@ -643,9 +680,6 @@ export default function Home() {
     await updateEventDates(info);
   };
 
-  const handleNowMarkerClick = () => {
-    setIsNowModalOpen(true);
-  };
 
   const handleNowModalSave = (project: string, description: string) => {
     setSelectedProject(project);
@@ -654,13 +688,8 @@ export default function Home() {
     setIsNowModalOpen(false);
   };
 
-  // Calcula el offset vertical basado en minutos transcurridos desde medianoche
-  const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  const nowTopOffset = (minutesSinceMidnight / 1440) * calendarContainerHeight;
-  // Calcula el índice del día (asumiendo vista timeGridWeek donde el primer día corresponde a domingo)
-  const dayIndex = now.getDay();
-  // Calcular la posición horizontal: dividir la anchura del calendario en 7 columnas y ubicar el botón en el centro de la columna actual
-  const nowLeftOffset = `${(dayIndex + 0.5) * (100 / 7)}%`;
+
+  
 
   return (
     <div className="p-6 space-y-6">
@@ -782,18 +811,11 @@ export default function Home() {
         >
           <Button
             onClick={handleNowMarkerClick}
-            title="Iniciar timer ahora"
-            style={{
-              width: "75px",
-              height: "75px",
-              borderRadius: "50%",
-              border: "none",
-              backgroundImage:
-                "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAs8AAAEgCAYAAABLiJ59AAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAtdEVYdENyZWF0aW9uIFRpbWUARnJpIDI4IEZlYiAyMDI1IDA2OjQ1OjA4IFBNIC0wNSKgn0IAAAkSSURBVHic7d0xaFQLFsfhM+sKMqCYQlCGECymMbU2acQuhZBKI9qlUGxsTKPNFmKTSgS7gJ0hVTBCejuDhYXpBJFwMY0gprEJecXb9alx9v0fJJOb+H1d7mTgNIf5zZ07czvdbne7Buj1etU0zaCHgX1kP6Gd7Ca0127s5792aRYAADj0xDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAIQ6/X5/e7+HAACAg6DT7XYHxnOv16umaYY5DxCyn9BOdhPaazf202UbAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQEs8AABASzwAAEBLPAAAQ6vT7/e393sIAAA4CDrdbndgPPd6vWqaZpjzACH7Ce1kN6G9dmM/XbYBAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAIfEMAAAh8QwAACHxDAAAChTr/f397vIQAA4CDodLvdgfHc6/WqaZphzgOE7Ce0k92E9tqN/XTZBgAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhMQzAACExDMAAITEMwAAhP4AHxYts2hUDCoAAAAASUVORK5CYII=)",
-              backgroundSize: "cover",
-              backgroundRepeat: "no-repeat",
-            }}
-          ></Button>
+            title="Ir a la hora actual"
+            className="w-[80px] h-[40px] bg-red-500 text-white rounded-md font-bold shadow-md hover:bg-red-600 transition duration-300 ease-in-out"
+          >
+            NOW
+          </Button>
         </div>
       </div>
       {selectedEvent && (
