@@ -70,7 +70,7 @@ interface AddEventModalProps {
   projects: Project[];
 }
 
-// Modal para agregar evento manual (ya existente)
+// Modal para agregar evento manual
 const AddEventModal: React.FC<AddEventModalProps> = ({
   isOpen,
   onClose,
@@ -286,11 +286,13 @@ export default function Home() {
       );
       const data = await response.json();
       if (data.status === "success" && data.hora_actual) {
-        const start = new Date(data.hora_actual);
+        // Convertir la hora UTC obtenida a la hora local
+        const startUtc = new Date(data.hora_actual);
+        const start = new Date(startUtc.getTime() + startUtc.getTimezoneOffset() * 60000);
         const end = new Date(start.getTime() + 60000); // duración de 1 minuto
         const dummy: EventData = {
           id: "dummy-timer-event",
-          title: "", // sin información visible
+          title: "", // sin información visible, usaremos una renderización custom
           start: start.toISOString(),
           end: end.toISOString(),
           display: "block",
@@ -485,7 +487,7 @@ export default function Home() {
     await updateEventDates(info);
   };
 
-  // Modificar el comportamiento al hacer click en un evento:
+  // Modificar comportamiento al hacer click en un evento:
   // Si es el dummy event, abrir el TimerEventModal.
   const handleEventClick = (info: EventClickArg): void => {
     if (info.event.id === "dummy-timer-event") {
@@ -803,12 +805,39 @@ export default function Home() {
           editable={true}
           selectable
           select={handleSelect}
-          // Combina los eventos del backend con el dummy event
+          // Combinar eventos del backend con el dummy event
           events={dummyEvent ? [...events, dummyEvent] : events}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
+          // Renderizado custom para el dummy event usando el estilo indicado (imagen base64)
+          eventContent={(arg) => {
+            if (arg.event.id === "dummy-timer-event") {
+              return (
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#333",
+                  border: "1px solid #666",
+                  borderRadius: "4px",
+                  padding: "4px",
+                  color: "#fff",
+                  fontWeight: "bold"
+                }}>
+                  <img 
+                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAs8AAAEgCAYAAABLiJ59AAAABHNCSVQICAgIfAhkiAAAABl0RVh0U29mdHdhcmUAZ25vbWUtc2NyZWVuc2hvdO8Dvz4AAAAtdEVYdENyZWF0aW9uIFRpbWUAU2F0IDAxIE1hciAyMDI1IDExOjEwOjE5IEFNIC0wNbubH/sAAAj8SURBVHic7d0xaBRtHsfxZ84TZCHBFII6hGCxjaljk0bsUgipNIJdCsXGxjTaXCE2ViLYBewMqYIW6YUUBgvBpBNEwmgaQbCxCXvFe7ynSbz398rt7mT9fLpMMsy/edhvZp+drTqdTq/0UV3XpWmafl4C+AXWJrSX9Qnt9Y9hDwAAAEeFeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAUNXtdvv6qDoAABgVlec8w+/J2oT2sj6hvWzbAACAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAkHgGAICQeAYAgJB4BgCAUNXtdnvDHgIAAI6CqtPp9DWe67ouTdP08xLAL7A2ob2sT2gv2zYAACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAgJJ4BACAkngEAICSeAQAg9G+BQRSWrcZNRwAAAABJRU5ErkJggg==" 
+                    alt="Timer Icon" 
+                    style={{width: "30px", height: "30px", marginBottom: "4px"}}
+                  />
+                  <span>Iniciar Temporizador</span>
+                </div>
+              );
+            }
+            return null;
+          }}
           eventClassNames={({ event }) => {
             const project = projects.find(
               (p) => p.name === event.extendedProps.project
@@ -816,12 +845,15 @@ export default function Home() {
             return project ? "border-accent text-primary-foreground" : "";
           }}
           eventDidMount={(info) => {
-            const project = projects.find(
-              (p) => p.name === info.event.extendedProps.project
-            );
-            const color = project ? project.color : "#999999";
-            info.el.style.backgroundColor = color;
-            info.el.style.borderColor = color;
+            // Apply default styling for non-dummy events
+            if (info.event.id !== "dummy-timer-event") {
+              const project = projects.find(
+                (p) => p.name === info.event.extendedProps.project
+              );
+              const color = project ? project.color : "#999999";
+              info.el.style.backgroundColor = color;
+              info.el.style.borderColor = color;
+            }
           }}
         />
       </div>
