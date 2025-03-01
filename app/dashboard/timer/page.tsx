@@ -815,13 +815,18 @@ export default function Home() {
             return "border-accent text-primary-foreground";
           }}
           eventDidMount={(info) => {
-            // Encontrar el proyecto asociado al evento
-            const project = projects.find(
-              (p) => p.name === info.event.extendedProps.project
-            );
-            const color = project ? project.color : "#999999"; // Color por defecto si no tiene
+            // **1️⃣ Aplicar color a los eventos NORMALES según su proyecto**
+            if (info.event.id !== "dummy-timer-event") {
+              const project = projects.find((p) => p.name === info.event.extendedProps.project);
+              const color = project ? project.color : "#999999"; // Color por defecto si no tiene
           
-            // Aplicar color al evento real
+              info.el.style.backgroundColor = color;
+              info.el.style.borderColor = color;
+              info.el.style.color = "white"; // Asegurar que el texto sea legible
+              return; // Salimos aquí para evitar que se mezcle con el dummy event
+            }
+          
+            // **2️⃣ Modificar SOLO el dummy-timer-event (sin afectar colores de otros eventos)**
             if (info.event.id === "dummy-timer-event") {
               const container = document.createElement("div");
               container.className = "absolute flex items-center w-full";
@@ -851,7 +856,8 @@ export default function Home() {
                 parent.appendChild(container);
               }
             }
-          }}                    
+          }}
+                           
         />
       </div>
       {selectedEvent && selectedEvent.id !== "dummy-timer-event" && (
